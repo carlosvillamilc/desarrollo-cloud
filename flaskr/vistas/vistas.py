@@ -1,5 +1,4 @@
-import queue
-from flask import request, Flask, render_template
+from flask import request, jsonify
 from ..modelos import db, Tarea, Usuario, UsuarioSchema, TareaSchema
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
@@ -8,11 +7,22 @@ from datetime import datetime
 from celery import Celery
 from werkzeug.utils import secure_filename
 
+import os
+import queue
+
 celery_app = Celery(__name__, broker='redis://localhost:6379/0')
 
 @celery_app.task(name = 'registrar_login')
 def registrar_login(*args):
     pass
+ 
+ALLOWED_EXTENSIONS = set(['mp3', 'acc', 'ogg'])
+UPLOAD_FOLDER = '../archivos_audio'
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 
 tarea_schema = TareaSchema()
@@ -53,23 +63,55 @@ class VistaTarea(Resource):
     @jwt_required()
     def post(self):
         id_usuario = Usuario.query.filter_by(usuario = get_jwt_identity()).first().id
-        nombre_archivo = request.json["fileName"]
         
-        # try:
-        #     f = request.files['file']
-        #     filename = secure_filename(f.filename)
-        #     f.save(filename)
-        # except Exception as e: 
-        #     print(e)
-        #     return 'Error al intentar subir el archivo',409
+        # check if the post request has the file part
+        print(request.files)
+        if 'file' not in request.files:
+            resp = jsonify({'message' : 'No file part in the request'})
+            resp.status_code = 400
+            return resp
         
-        nueva_tarea = Tarea(id_usuario = id_usuario, estado="UPLOADED", nombre_archivo= nombre_archivo, formato_destino=request.json["newFormat"])
-        db.session.add(nueva_tarea)
+            
+        files = request.files.getlist('file')
+        errors = {}
+        success = False
+        
+        for file in files:
+            print(file)
+            print(allowed_file(file.filename))
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                print(filename)
+                file.save(os.path.join(UPLOAD_FOLDER, filename))
+                success = True                
+            else:
+                errors['message'] = 'File type is not allowed or file not specified'
+        print(success,errors)
+        
+        if request.form['new_format'].lower() not in ALLOWED_EXTENSIONS:
+            errors['message'] = 'Format to convert type is not allowed'
+            resp = jsonify(errors)
+            resp.status_code = 400
+            return resp
+        
+        if success:            
+            nueva_tarea = Tarea(id_usuario = id_usuario, estado="UPLOADED", nombre_archivo= filename, formato_destino=request.form['new_format'])
+            db.session.add(nueva_tarea)
 
-        try:
-            db.session.commit()
-        except IntegrityError:
-            db.session.rollback()
-            return 'La tarea no pudo ser creada',409
-
-        return tarea_schema.dump(nueva_tarea)
+            try:
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+                return 'La tarea no pudo ser creada',409
+            
+            resp = jsonify({'message' : tarea_schema.dump(nueva_tarea)})
+            resp.status_code = 201
+            return resp            
+            
+        else:
+            print("else")
+            resp = jsonify(errors)
+            resp.status_code = 500
+            return resp
+            
+        

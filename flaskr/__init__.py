@@ -6,5 +6,5 @@ def create_app(config_name):
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['JWT_SECRET_KEY']='secretisimo'
     app.config['PROPAGATE_EXCEPTIONS'] = True
-    app.config['UPLOAD_FOLDER'] = "/archivos_audio"
+    app.config['UPLOAD_FOLDER'] = "/"
     return app

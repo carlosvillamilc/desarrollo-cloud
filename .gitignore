@@ -149,3 +149,7 @@ eporra.db
 
 .pre-commit-config.yaml
 .DS_Store
+
+archivos_audio
+
+flaskr/cloud_conversio_tool.db
