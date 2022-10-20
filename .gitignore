@@ -152,5 +152,5 @@ eporra.db
 
 archivos_audio
 
-flaskr/cloud_conversio_tool.db
+flaskr/cloud_conversion_tool.db
 registros_logins.txt
