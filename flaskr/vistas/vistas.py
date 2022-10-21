@@ -121,5 +121,22 @@ class VistaTareas(Resource):
 class VistaTarea(Resource):    
     @jwt_required()
     def get(self, id_tarea):
-        id_usuario = Usuario.query.filter_by(usuario = get_jwt_identity()).first().id        
+        id_usuario = Usuario.query.filter_by(usuario = get_jwt_identity()).first().id
         return [tarea_schema.dump(tarea) for tarea in Tarea.query.filter(Tarea.id_usuario == id_usuario,Tarea.id == id_tarea).all()]
+
+    @jwt_required()
+    def delete(self, id_tarea):
+        id_usuario = Usuario.query.filter_by(usuario = get_jwt_identity()).first().id
+        tarea = Tarea.query.filter(Tarea.id_usuario == id_usuario,Tarea.id == id_tarea).first()
+        print(tarea.nombre_archivo)
+        if os.path.exists(os.path.join(UPLOAD_FOLDER, tarea.nombre_archivo)):
+            os.remove(os.path.join(UPLOAD_FOLDER, tarea.nombre_archivo))
+            resp = jsonify({'message' : 'Los archivos fueron eliminados'})
+            resp.status_code = 204
+            return resp
+        else:
+            resp = jsonify({'message' : 'Los archivos no existen'})
+            resp.status_code = 400
+            return resp
+        
+        
