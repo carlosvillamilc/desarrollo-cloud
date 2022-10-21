@@ -16,9 +16,9 @@ db.create_all()
 cors = CORS(app)
 
 api = Api(app)
-api.add_resource(VistaSignIn, '/signin')
-api.add_resource(VistaLogIn, '/login')
-api.add_resource(VistaTarea, '/tarea')
-api.add_resource(VistaTareas, '/tareas')
+api.add_resource(VistaSignIn, '/api/auth/signup')
+api.add_resource(VistaLogIn, '/api/auth/login')
+api.add_resource(VistaTareas, '/api/tasks')
+api.add_resource(VistaTarea, '/api/tasks/<int:id_tarea>')
 
 jwt = JWTManager(app)

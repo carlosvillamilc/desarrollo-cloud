@@ -56,9 +56,13 @@ class VistaLogIn(Resource):
             return {"mensaje":"Acceso concedido", "usuario": {"usuario": usuario.usuario, "id": usuario.id}, "token": token_de_acceso}
         else:
             return {'mensaje':'Nombre de usuario o contraseña incorrectos'}, 401
-            
 
-class VistaTarea(Resource):
+class VistaTareas(Resource):
+
+    @jwt_required()
+    def get(self):
+        id_usuario = Usuario.query.filter_by(usuario = get_jwt_identity()).first().id
+        return [tarea_schema.dump(tarea) for tarea in Tarea.query.filter(Tarea.id_usuario == id_usuario).all()]
     
     @jwt_required()
     def post(self):
@@ -114,8 +118,8 @@ class VistaTarea(Resource):
             resp.status_code = 500
             return resp
 
-
-class VistaTareas(Resource):            
+class VistaTarea(Resource):    
     @jwt_required()
-    def get(self):
-        return [tarea_schema.dump(tarea) for tarea in Tarea.query.all()]   
+    def get(self, id_tarea):
+        id_usuario = Usuario.query.filter_by(usuario = get_jwt_identity()).first().id        
+        return [tarea_schema.dump(tarea) for tarea in Tarea.query.filter(Tarea.id_usuario == id_usuario,Tarea.id == id_tarea).all()]
