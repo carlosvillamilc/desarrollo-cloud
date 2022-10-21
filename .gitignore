@@ -154,3 +154,4 @@ archivos_audio
 
 flaskr/cloud_conversion_tool.db
 registros_logins.txt
+dump.rdb
