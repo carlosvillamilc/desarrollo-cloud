@@ -113,5 +113,9 @@ class VistaTarea(Resource):
             resp = jsonify(errors)
             resp.status_code = 500
             return resp
-            
-        
+
+
+class VistaTareas(Resource):            
+    @jwt_required()
+    def get(self):
+        return [tarea_schema.dump(tarea) for tarea in Tarea.query.all()]   
