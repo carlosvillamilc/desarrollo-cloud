@@ -153,5 +153,5 @@ eporra.db
 archivos_audio
 
 flaskr/cloud_conversion_tool.db
-registros_logins.txt
+registro_logins.txt
 dump.rdb
