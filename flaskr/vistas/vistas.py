@@ -1,4 +1,6 @@
 from flask import request, jsonify
+
+from flaskr.modelos.modelos import EstadoTarea
 from ..modelos import db, Tarea, Usuario, UsuarioSchema, TareaSchema
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
@@ -126,17 +128,35 @@ class VistaTarea(Resource):
 
     @jwt_required()
     def delete(self, id_tarea):
+        message = {}
         id_usuario = Usuario.query.filter_by(usuario = get_jwt_identity()).first().id
         tarea = Tarea.query.filter(Tarea.id_usuario == id_usuario,Tarea.id == id_tarea).first()
-        print(tarea.nombre_archivo)
-        if os.path.exists(os.path.join(UPLOAD_FOLDER, tarea.nombre_archivo)):
-            os.remove(os.path.join(UPLOAD_FOLDER, tarea.nombre_archivo))
-            resp = jsonify({'message' : 'Los archivos fueron eliminados'})
-            resp.status_code = 204
+        
+        if tarea == None:
+            resp = jsonify({'message' : 'La tarea no se encuentra'})
+            resp.status_code = 404
             return resp
+        
+        archivo_original = tarea.nombre_archivo.split(".")
+        formato_destino = str(tarea.formato_destino)        
+        nombre_archivo_converido = archivo_original[0] + '.' +  formato_destino.split(".")[1].lower()
+        
+        if tarea.estado == EstadoTarea.PROCESSED:
+            if os.path.exists(os.path.join(UPLOAD_FOLDER, tarea.nombre_archivo)) and \
+                os.path.exists(os.path.join(UPLOAD_FOLDER, nombre_archivo_converido)) :
+                os.remove(os.path.join(UPLOAD_FOLDER, tarea.nombre_archivo))
+                os.remove(os.path.join(UPLOAD_FOLDER, nombre_archivo_converido))
+                resp = jsonify({'message' : 'Los archivos fueron eliminados'})
+                resp.status_code = 204
+                return resp
+            else:                
+                resp = jsonify({'message' : 'Los archivos no existen'})
+                resp.status_code = 400
+                return resp
         else:
-            resp = jsonify({'message' : 'Los archivos no existen'})
+            resp = jsonify({'message' : 'Los archivos todavia se estan procesando'})
             resp.status_code = 400
             return resp
+
         
         
