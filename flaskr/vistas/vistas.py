@@ -1,6 +1,6 @@
 from flask import request, jsonify, send_from_directory
 
-# from tareas.tareas import celery_app
+
 from ..modelos import db, Tarea, Usuario, UsuarioSchema, TareaSchema, EstadoTarea
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
@@ -11,11 +11,6 @@ from werkzeug.utils import secure_filename
 import os
 import queue
 
-# celery_app = Celery(__name__, broker='redis://localhost:6379/0')
-
-# @celery_app.task(name = 'registrar_login')
-# def registrar_login(*args):
-#     pass
  
 ALLOWED_EXTENSIONS = set(['mp3', 'wav', 'ogg'])
 UPLOAD_FOLDER = '../archivos_audio'
@@ -149,7 +144,13 @@ class VistaTarea(Resource):
             errors = {}
 
             if tarea_actualizar.estado == EstadoTarea.PROCESSED and os.path.exists(os.path.join(UPLOAD_FOLDER, tarea_actualizar.nombre_archivo)):
-                os.remove(os.path.join(UPLOAD_FOLDER, tarea_actualizar.nombre_archivo))
+                
+                archivo_original = tarea_actualizar.nombre_archivo.split(".")
+                formato_destino = str(tarea_actualizar.formato_destino)        
+                nombre_archivo_converido = archivo_original[0] + '.' +  formato_destino.split(".")[1].lower()
+                
+                os.remove(os.path.join(UPLOAD_FOLDER, nombre_archivo_converido))
+
                 tarea_actualizar.formato_destino = request.json.get("newFormat", tarea_actualizar.formato_destino)
                 tarea_actualizar.estado = EstadoTarea.UPLOADED
                 try:
@@ -160,7 +161,7 @@ class VistaTarea(Resource):
                     return 'El formato no pudo ser actualizado'
 
             else:
-                errors['message'] = 'File type is not allowed or file not specified'
+                return 'File type is not allowed or file not specified'
         except:
 
             return {"Message": "No task found"}
