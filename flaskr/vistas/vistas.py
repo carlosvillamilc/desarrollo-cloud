@@ -10,13 +10,13 @@ from werkzeug.utils import secure_filename
 import os
 import queue
 
-celery_app = Celery(__name__, broker='redis://localhost:6379/0')
+# celery_app = Celery(__name__, broker='redis://localhost:6379/0')
 
-@celery_app.task(name = 'registrar_login')
-def registrar_login(*args):
-    pass
+# @celery_app.task(name = 'registrar_login')
+# def registrar_login(*args):
+#     pass
  
-ALLOWED_EXTENSIONS = set(['mp3', 'acc', 'ogg'])
+ALLOWED_EXTENSIONS = set(['mp3', 'wav', 'ogg'])
 UPLOAD_FOLDER = '../archivos_audio'
 
 
@@ -52,7 +52,7 @@ class VistaLogIn(Resource):
         if usuario:
             token_de_acceso = create_access_token(identity = usuario.usuario)
             args = (usuario_u, datetime.utcnow())
-            registrar_login.apply_async(args = args, queue = 'login')#la cola se llama login
+            #registrar_login.apply_async(args = args, queue = 'login')#la cola se llama login
             return {"mensaje":"Acceso concedido", "usuario": {"usuario": usuario.usuario, "id": usuario.id}, "token": token_de_acceso}
         else:
             return {'mensaje':'Nombre de usuario o contraseña incorrectos'}, 401
@@ -92,14 +92,14 @@ class VistaTareas(Resource):
                 errors['message'] = 'File type is not allowed or file not specified'
         print(success,errors)
         
-        if request.form['new_format'].lower() not in ALLOWED_EXTENSIONS:
+        if request.form['newFormat'].lower() not in ALLOWED_EXTENSIONS:
             errors['message'] = 'Format to convert type is not allowed'
             resp = jsonify(errors)
             resp.status_code = 400
             return resp
         
         if success:            
-            nueva_tarea = Tarea(id_usuario = id_usuario, estado="UPLOADED", nombre_archivo= filename, formato_destino=request.form['new_format'])
+            nueva_tarea = Tarea(id_usuario = id_usuario, estado="UPLOADED", nombre_archivo= filename, formato_destino=request.form['new_format'].upper())
             db.session.add(nueva_tarea)
 
             try:

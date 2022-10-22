@@ -15,10 +15,8 @@ class EstadoTarea(int, enum.Enum):
 @enum.unique            
 class Formato(int, enum.Enum):
     MP3: int = 1                                      
-    ACC: int = 2
+    WAV: int = 2
     OGG: int = 3
-    # WAV: int = 4
-    # WMA: int = 5
 
 class Tarea(db.Model):
     id = db.Column(db.Integer, primary_key = True)
