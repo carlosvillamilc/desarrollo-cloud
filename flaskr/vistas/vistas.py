@@ -138,5 +138,21 @@ class VistaTarea(Resource):
             resp = jsonify({'message' : 'Los archivos no existen'})
             resp.status_code = 400
             return resp
+
+class VistaArchivo(Resource):
+    @jwt_required()
+    def get(self, filename):
+        #id_usuario = Usuario.query.filter_by(usuario = get_jwt_identity()).first().id
+        errors = {}
+        found = False
+        for file in os.listdir(UPLOAD_FOLDER):
+            if str(filename) in file:
+                print(file)
+                found = True
+                return send_from_directory(UPLOAD_FOLDER, file, mimetype='audio/mpeg', as_attachment=True, attachment_filename='audio.mp3.mp3')
+        if found == False:
+            errors['message'] = 'File not found'
+            resp = jsonify(errors)
+            return resp
         
         
