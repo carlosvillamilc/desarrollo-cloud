@@ -1,4 +1,4 @@
-from flask import request, jsonify
+from flask import request, jsonify, send_from_directory
 from ..modelos import db, Tarea, Usuario, UsuarioSchema, TareaSchema
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
