@@ -12,12 +12,13 @@ from werkzeug.utils import secure_filename
 import os
 import queue
 
-celery_app = Celery(__name__, broker='redis://localhost:6379/0')
+'''celery_app = Celery(__name__, broker='redis://localhost:6379/0')
 
 @celery_app.task(name = 'registrar_login')
 def registrar_login(*args):
     pass
- 
+'''
+
 ALLOWED_EXTENSIONS = set(['mp3', 'acc', 'ogg'])
 UPLOAD_FOLDER = '../archivos_audio'
 
@@ -53,8 +54,8 @@ class VistaLogIn(Resource):
         db.session.commit()
         if usuario:
             token_de_acceso = create_access_token(identity = usuario.usuario)
-            args = (usuario_u, datetime.utcnow())
-            registrar_login.apply_async(args = args, queue = 'login')#la cola se llama login
+            #args = (usuario_u, datetime.utcnow())
+            #registrar_login.apply_async(args = args, queue = 'login')#la cola se llama login
             return {"mensaje":"Acceso concedido", "usuario": {"usuario": usuario.usuario, "id": usuario.id}, "token": token_de_acceso}
         else:
             return {'mensaje':'Nombre de usuario o contraseña incorrectos'}, 401
