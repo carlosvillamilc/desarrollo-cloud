@@ -1,6 +1,6 @@
 from flask import request, jsonify, send_from_directory
 
-from tareas.tareas import celery_app
+# from tareas.tareas import celery_app
 from ..modelos import db, Tarea, Usuario, UsuarioSchema, TareaSchema, EstadoTarea
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
@@ -12,12 +12,6 @@ import os
 import queue
 
 # celery_app = Celery(__name__, broker='redis://localhost:6379/0')
-
-
-@celery_app.task(name='registrar_login')
-def registrar_login(*args):
-    pass
-
 
 # @celery_app.task(name = 'registrar_login')
 # def registrar_login(*args):
@@ -105,7 +99,7 @@ class VistaTareas(Resource):
             return resp
         
         if success:            
-            nueva_tarea = Tarea(id_usuario = id_usuario, estado="UPLOADED", nombre_archivo= filename, formato_destino=request.form['new_format'].upper())
+            nueva_tarea = Tarea(id_usuario = id_usuario, estado="UPLOADED", nombre_archivo= filename, formato_destino=request.form['newFormat'].upper())
             db.session.add(nueva_tarea)
 
             try:
