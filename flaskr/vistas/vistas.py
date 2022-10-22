@@ -1,16 +1,17 @@
-from flask import request, jsonify
+from flask import request, jsonify, send_from_directory
+
+from tareas.tareas import celery_app
 from ..modelos import db, Tarea, Usuario, UsuarioSchema, TareaSchema, EstadoTarea
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
 from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
 from datetime import datetime
-from celery import Celery
 from werkzeug.utils import secure_filename
 
 import os
 import queue
 
-celery_app = Celery(__name__, broker='redis://localhost:6379/0')
+# celery_app = Celery(__name__, broker='redis://localhost:6379/0')
 
 
 @celery_app.task(name='registrar_login')
@@ -18,7 +19,11 @@ def registrar_login(*args):
     pass
 
 
-ALLOWED_EXTENSIONS = set(['mp3', 'acc', 'ogg'])
+# @celery_app.task(name = 'registrar_login')
+# def registrar_login(*args):
+#     pass
+ 
+ALLOWED_EXTENSIONS = set(['mp3', 'wav', 'ogg'])
 UPLOAD_FOLDER = '../archivos_audio'
 
 
@@ -53,7 +58,7 @@ class VistaLogIn(Resource):
         if usuario:
             token_de_acceso = create_access_token(identity = usuario.usuario)
             args = (usuario_u, datetime.utcnow())
-            registrar_login.apply_async(args = args, queue = 'login')#la cola se llama login
+            #registrar_login.apply_async(args = args, queue = 'login')#la cola se llama login
             return {"mensaje":"Acceso concedido", "usuario": {"usuario": usuario.usuario, "id": usuario.id}, "token": token_de_acceso}
         else:
             return {'mensaje':'Nombre de usuario o contraseña incorrectos'}, 401
@@ -93,14 +98,14 @@ class VistaTareas(Resource):
                 errors['message'] = 'File type is not allowed or file not specified'
         print(success,errors)
         
-        if request.form['new_format'].lower() not in ALLOWED_EXTENSIONS:
+        if request.form['newFormat'].lower() not in ALLOWED_EXTENSIONS:
             errors['message'] = 'Format to convert type is not allowed'
             resp = jsonify(errors)
             resp.status_code = 400
             return resp
         
         if success:            
-            nueva_tarea = Tarea(id_usuario = id_usuario, estado="UPLOADED", nombre_archivo= filename, formato_destino=request.form['new_format'])
+            nueva_tarea = Tarea(id_usuario = id_usuario, estado="UPLOADED", nombre_archivo= filename, formato_destino=request.form['new_format'].upper())
             db.session.add(nueva_tarea)
 
             try:
@@ -166,4 +171,19 @@ class VistaTarea(Resource):
 
             return {"Message": "No task found"}
 
+class VistaArchivo(Resource):
+    @jwt_required()
+    def get(self, filename):
+        #id_usuario = Usuario.query.filter_by(usuario = get_jwt_identity()).first().id
+        errors = {}
+        found = False
+        for file in os.listdir(UPLOAD_FOLDER):
+            if str(filename) in file:
+                print(file)
+                found = True
+                return send_from_directory(UPLOAD_FOLDER, file, mimetype='audio/mpeg', as_attachment=True, attachment_filename='audio.mp3.mp3')
+        if found == False:
+            errors['message'] = 'File not found'
+            resp = jsonify(errors)
+            return resp
 
