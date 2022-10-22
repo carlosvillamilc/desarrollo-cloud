@@ -150,7 +150,6 @@ eporra.db
 .pre-commit-config.yaml
 .DS_Store
 
-archivos_audio
 
 flaskr/cloud_conversion_tool.db
 registro_logins.txt

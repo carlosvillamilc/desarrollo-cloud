@@ -1,6 +1,4 @@
 from flask import request, jsonify, send_from_directory
-
-
 from ..modelos import db, Tarea, Usuario, UsuarioSchema, TareaSchema, EstadoTarea
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
@@ -11,7 +9,6 @@ from werkzeug.utils import secure_filename
 import os
 import queue
 
- 
 ALLOWED_EXTENSIONS = set(['mp3', 'wav', 'ogg'])
 UPLOAD_FOLDER = '../archivos_audio'
 
@@ -45,9 +42,7 @@ class VistaLogIn(Resource):
         usuario = Usuario.query.filter_by(usuario = usuario_u, contrasena = usuario_contrasena).first()
         db.session.commit()
         if usuario:
-            token_de_acceso = create_access_token(identity = usuario.usuario)
-            args = (usuario_u, datetime.utcnow())
-            #registrar_login.apply_async(args = args, queue = 'login')#la cola se llama login
+            token_de_acceso = create_access_token(identity = usuario.usuario)            
             return {"mensaje":"Acceso concedido", "usuario": {"usuario": usuario.usuario, "id": usuario.id}, "token": token_de_acceso}
         else:
             return {'mensaje':'Nombre de usuario o contraseña incorrectos'}, 401
@@ -122,35 +117,46 @@ class VistaTarea(Resource):
 
     @jwt_required()
     def delete(self, id_tarea):
+                
         id_usuario = Usuario.query.filter_by(usuario = get_jwt_identity()).first().id
         tarea = Tarea.query.filter(Tarea.id_usuario == id_usuario,Tarea.id == id_tarea).first()
         print(tarea.nombre_archivo)
-        if os.path.exists(os.path.join(UPLOAD_FOLDER, tarea.nombre_archivo)):
-            os.remove(os.path.join(UPLOAD_FOLDER, tarea.nombre_archivo))
-            resp = jsonify({'message' : 'Los archivos fueron eliminados'})
-            resp.status_code = 204
-            return resp
+
+        archivo_original = tarea.nombre_archivo.split(".")
+        formato_destino = str(tarea.formato_destino)        
+        nombre_archivo_converido = archivo_original[0] + '.' +  formato_destino.split(".")[1].lower()
+
+        if tarea.estado == EstadoTarea.PROCESSED:
+            if os.path.exists(os.path.join(UPLOAD_FOLDER, tarea.nombre_archivo)) and \
+                os.path.exists(os.path.join(UPLOAD_FOLDER, nombre_archivo_converido)) :
+                
+                os.remove(os.path.join(UPLOAD_FOLDER, tarea.nombre_archivo))
+                os.remove(os.path.join(UPLOAD_FOLDER, nombre_archivo_converido))
+                resp = jsonify({'message' : 'Los archivos fueron eliminados'})
+                resp.status_code = 204
+                return resp
+            else:
+                resp = jsonify({'message' : 'Los archivos no existen'})
+                resp.status_code = 400
+                return resp
         else:
-            resp = jsonify({'message' : 'Los archivos no existen'})
+            resp = jsonify({'message' : 'Los archivos todavia se estan procesando'}) 
             resp.status_code = 400
             return resp
-
+        
     @jwt_required()
     def put(self, id_tarea):
         try:
             id_usuario = Usuario.query.filter_by(usuario=get_jwt_identity()).first().id
             tarea_actualizar = Tarea.query.filter(Tarea.id_usuario == id_usuario, Tarea.id == id_tarea).first()
-
             errors = {}
-
             if tarea_actualizar.estado == EstadoTarea.PROCESSED and os.path.exists(os.path.join(UPLOAD_FOLDER, tarea_actualizar.nombre_archivo)):
-                
                 archivo_original = tarea_actualizar.nombre_archivo.split(".")
                 formato_destino = str(tarea_actualizar.formato_destino)        
                 nombre_archivo_converido = archivo_original[0] + '.' +  formato_destino.split(".")[1].lower()
-                
-                os.remove(os.path.join(UPLOAD_FOLDER, nombre_archivo_converido))
 
+                os.remove(os.path.join(UPLOAD_FOLDER, nombre_archivo_converido))
+ 
                 tarea_actualizar.formato_destino = request.json.get("newFormat", tarea_actualizar.formato_destino)
                 tarea_actualizar.estado = EstadoTarea.UPLOADED
                 try:
@@ -159,11 +165,9 @@ class VistaTarea(Resource):
                 except IntegrityError:
                     db.session.rollback()
                     return 'El formato no pudo ser actualizado'
-
             else:
                 return 'File type is not allowed or file not specified'
         except:
-
             return {"Message": "No task found"}
 
 class VistaArchivo(Resource):
@@ -176,9 +180,9 @@ class VistaArchivo(Resource):
             if str(filename) in file:
                 print(file)
                 found = True
-                return send_from_directory(UPLOAD_FOLDER, file, mimetype='audio/mpeg', as_attachment=True, attachment_filename='audio.mp3.mp3')
+                return send_from_directory(UPLOAD_FOLDER, file, mimetype='audio/mpeg', as_attachment=True, attachment_filename=filename)
+
         if found == False:
             errors['message'] = 'File not found'
             resp = jsonify(errors)
             return resp
-
