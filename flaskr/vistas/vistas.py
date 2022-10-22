@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from ..modelos import db, Tarea, Usuario, UsuarioSchema, TareaSchema
+from ..modelos import db, Tarea, Usuario, UsuarioSchema, TareaSchema, EstadoTarea
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
 from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
@@ -12,17 +12,18 @@ import queue
 
 celery_app = Celery(__name__, broker='redis://localhost:6379/0')
 
-@celery_app.task(name = 'registrar_login')
+
+@celery_app.task(name='registrar_login')
 def registrar_login(*args):
     pass
- 
+
+
 ALLOWED_EXTENSIONS = set(['mp3', 'acc', 'ogg'])
 UPLOAD_FOLDER = '../archivos_audio'
 
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
 
 
 tarea_schema = TareaSchema()
@@ -33,7 +34,7 @@ class VistaSignIn(Resource):
     
     def post(self):
         nuevo_usuario = Usuario(usuario=request.json["usuario"], contrasena=request.json["contrasena"], correo = request.json["correo"])
-        token_de_acceso = create_access_token(identity = request.json["usuario"])
+        token_de_acceso = create_access_token(identity=request.json["usuario"])
         try:
             db.session.add(nuevo_usuario)
             db.session.commit()
@@ -57,6 +58,7 @@ class VistaLogIn(Resource):
         else:
             return {'mensaje':'Nombre de usuario o contraseña incorrectos'}, 401
 
+
 class VistaTareas(Resource):
 
     @jwt_required()
@@ -74,8 +76,7 @@ class VistaTareas(Resource):
             resp = jsonify({'message' : 'No file part in the request'})
             resp.status_code = 400
             return resp
-        
-            
+
         files = request.files.getlist('file')
         errors = {}
         success = False
@@ -118,6 +119,7 @@ class VistaTareas(Resource):
             resp.status_code = 500
             return resp
 
+
 class VistaTarea(Resource):    
     @jwt_required()
     def get(self, id_tarea):
@@ -138,5 +140,30 @@ class VistaTarea(Resource):
             resp = jsonify({'message' : 'Los archivos no existen'})
             resp.status_code = 400
             return resp
-        
-        
+
+    @jwt_required()
+    def put(self, id_tarea):
+        try:
+            id_usuario = Usuario.query.filter_by(usuario=get_jwt_identity()).first().id
+            tarea_actualizar = Tarea.query.filter(Tarea.id_usuario == id_usuario, Tarea.id == id_tarea).first()
+
+            errors = {}
+
+            if tarea_actualizar.estado == EstadoTarea.PROCESSED and os.path.exists(os.path.join(UPLOAD_FOLDER, tarea_actualizar.nombre_archivo)):
+                os.remove(os.path.join(UPLOAD_FOLDER, tarea_actualizar.nombre_archivo))
+                tarea_actualizar.formato_destino = request.json.get("newFormat", tarea_actualizar.formato_destino)
+                tarea_actualizar.estado = EstadoTarea.UPLOADED
+                try:
+                    db.session.commit()
+                    return "El formato fue actualizado"
+                except IntegrityError:
+                    db.session.rollback()
+                    return 'El formato no pudo ser actualizado'
+
+            else:
+                errors['message'] = 'File type is not allowed or file not specified'
+        except:
+
+            return {"Message": "No task found"}
+
+
