@@ -1,0 +1,4 @@
+# must be ended with a new line "LF" (Unix) and not "CRLF" (Windows)
+* * * * * bash /flaskr/run_cron.sh >> /flaskr/run_cron.log 2>&1
+#* * * * * python /flaskr/app_cron.py >> /flaskr/run_cron.log 2>&1
+# An empty line is required at the end of this file for a valid cron file.

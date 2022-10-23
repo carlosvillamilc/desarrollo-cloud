@@ -1,12 +1,13 @@
 version: '3.9'
 
 services:
-  pythonapp:
-    container_name: pythonapp
-    image: pythonapp
+  flaskapp:
+    container_name: flaskapp
+    image: flaskapp
+    command: gunicorn --bind 0.0.0.0:5000 wsgi:app
     build: .
     ports:
-      - "80:80"
+      - "5000:5000"    
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
     depends_on:

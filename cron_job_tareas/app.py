@@ -3,12 +3,26 @@ import atexit
 import os
 import sqlalchemy
 from pydub import AudioSegment
-from flaskr import create_app
-from .modelos import *
+#from flaskr import create_app
+#from .modelos import *
+from modelos import *
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask_mail import Mail
+from flask import Flask
 
-app = create_app('default')
+#app = create_app('default')
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://newuser@localhost:5432/cloud_conversion_tool'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['JWT_SECRET_KEY']='secretisimo'
+app.config['PROPAGATE_EXCEPTIONS'] = True
+app.config['UPLOAD_FOLDER'] = "/"
+app.config['MAIL_SERVER='] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'testcloudteam7@gmail.com'
+app.config['MAIL_PASSWORD'] = 'fqaqckznkqgnqdmp'
+
 app_context = app.app_context()
 app_context.push()
 
@@ -18,7 +32,8 @@ app.config.update(
     MAIL_USE_TLS=True,
     MAIL_USERNAME = 'testcloudteam7@gmail.com',
     MAIL_PASSWORD = 'fqaqckznkqgnqdmp',
-    SQLALCHEMY_DATABASE_URI = 'postgresql://newuser@localhost:5432/cloud_conversion_tool'
+    #SQLALCHEMY_DATABASE_URI = 'postgresql://newuser@localhost:5432/cloud_conversion_tool'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://conversiontool:conversiontool@db:5432/conversiontool'
 )
 db.init_app(app)
 mail = Mail(app)
@@ -76,4 +91,4 @@ scheduler.add_job(func = process_pending_tasks, trigger = "interval", seconds=60
 scheduler.start()
 
 # Para dejar de ejecutar el cron al salir de la aplicación:
-atexit.register(lambda: scheduler.shutdown())
+#atexit.register(lambda: scheduler.shutdown())

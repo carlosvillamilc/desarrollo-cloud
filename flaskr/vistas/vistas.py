@@ -1,5 +1,5 @@
 from flask import request, jsonify, send_from_directory
-from ..modelos import db, Tarea, Usuario, UsuarioSchema, TareaSchema, EstadoTarea
+from modelos import db, Tarea, Usuario, UsuarioSchema, TareaSchema, EstadoTarea
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
 from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
