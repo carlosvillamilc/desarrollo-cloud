@@ -20,3 +20,5 @@ $ docker compose up -d db
 $ docker compose up --build flaskapp
 ``` 
 5. Una vez finalizada la creación del contenedor ejecutar pruebas con postman. La aplicación esta corriendo desde localhost:5000
+
+6. En caso de utilizar un maquina Windows, se debe realizar un pequeño ajuste en el archivo entrypoint.sh seleccionando LF como "End of Line Sequence" en vez de CRLF.
