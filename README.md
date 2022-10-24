@@ -3,6 +3,9 @@ Pasos para ejecutar la aplicación en docker
 
 Es requerido tener instalado docker en la maquina
 
+Nota importante!
+Todos los archivos deben finalizar con new line "LF" (Unix) y no "CRLF" (Windows)
+
 1. Realizar el clone del repositorio y hacer git checkout a la rama dockerCron
 2. Ingresar a la carpeta clonada desarrollo-cloud
 ```
