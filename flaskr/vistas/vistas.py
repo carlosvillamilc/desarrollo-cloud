@@ -112,19 +112,29 @@ class VistaTareas(Resource):
 class VistaTarea(Resource):    
     @jwt_required()
     def get(self, id_tarea):
-        id_usuario = Usuario.query.filter_by(usuario = get_jwt_identity()).first().id
-        return [tarea_schema.dump(tarea) for tarea in Tarea.query.filter(Tarea.id_usuario == id_usuario,Tarea.id == id_tarea).all()]
+        id_usuario = Usuario.query.filter_by(usuario = get_jwt_identity()).first().id        
+        tarea =[tarea_schema.dump(tarea) for tarea in Tarea.query.filter(Tarea.id_usuario == id_usuario,Tarea.id == id_tarea).all()]
+        print(tarea)
+        if tarea == []:
+            resp = jsonify({'message' : 'La tarea no fue encontrada'}) 
+            resp.status_code = 404
+            return resp
+        return tarea
 
     @jwt_required()
     def delete(self, id_tarea):
                 
         id_usuario = Usuario.query.filter_by(usuario = get_jwt_identity()).first().id
         tarea = Tarea.query.filter(Tarea.id_usuario == id_usuario,Tarea.id == id_tarea).first()
-        print(tarea.nombre_archivo)
-
-        archivo_original = tarea.nombre_archivo.split(".")
-        formato_destino = str(tarea.formato_destino)        
-        nombre_archivo_converido = archivo_original[0] + '.' +  formato_destino.split(".")[1].lower()
+        
+        if tarea != None:
+            archivo_original = tarea.nombre_archivo.split(".")
+            formato_destino = str(tarea.formato_destino)        
+            nombre_archivo_converido = archivo_original[0] + '.' +  formato_destino.split(".")[1].lower()
+        else :
+            resp = jsonify({'message' : 'Los archivos / tarea no existen'})
+            resp.status_code = 404
+            return resp
 
         if tarea.estado == EstadoTarea.PROCESSED:
             if os.path.exists(os.path.join(UPLOAD_FOLDER, tarea.nombre_archivo)) and \
@@ -132,12 +142,16 @@ class VistaTarea(Resource):
                 
                 os.remove(os.path.join(UPLOAD_FOLDER, tarea.nombre_archivo))
                 os.remove(os.path.join(UPLOAD_FOLDER, nombre_archivo_converido))
+
+                db.session.delete(tarea)
+                db.session.commit()
+                
                 resp = jsonify({'message' : 'Los archivos fueron eliminados'})
                 resp.status_code = 204
                 return resp
             else:
                 resp = jsonify({'message' : 'Los archivos no existen'})
-                resp.status_code = 400
+                resp.status_code = 404
                 return resp
         else:
             resp = jsonify({'message' : 'Los archivos todavia se estan procesando'}) 
