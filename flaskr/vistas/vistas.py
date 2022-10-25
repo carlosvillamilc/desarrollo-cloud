@@ -52,12 +52,26 @@ class VistaTareas(Resource):
 
     @jwt_required()
     def get(self):
-        id_usuario = Usuario.query.filter_by(usuario = get_jwt_identity()).first().id
+        usuario = Usuario.query.filter_by(usuario = get_jwt_identity()).first()
+        
+        if usuario == None:
+            resp = jsonify({'message' : 'Usuario no identificado'})
+            resp.status_code = 401
+            return resp
+        
+        id_usuario = usuario.id
         return [tarea_schema.dump(tarea) for tarea in Tarea.query.filter(Tarea.id_usuario == id_usuario).all()]
     
     @jwt_required()
     def post(self):
-        id_usuario = Usuario.query.filter_by(usuario = get_jwt_identity()).first().id
+        usuario = Usuario.query.filter_by(usuario = get_jwt_identity()).first()
+        
+        if usuario == None:
+            resp = jsonify({'message' : 'Usuario no identificado'})
+            resp.status_code = 401
+            return resp
+        
+        id_usuario = usuario.id
         
         # check if the post request has the file part
         print(request.files)
@@ -112,7 +126,14 @@ class VistaTareas(Resource):
 class VistaTarea(Resource):    
     @jwt_required()
     def get(self, id_tarea):
-        id_usuario = Usuario.query.filter_by(usuario = get_jwt_identity()).first().id        
+        usuario = Usuario.query.filter_by(usuario = get_jwt_identity()).first()
+        
+        if usuario == None:
+            resp = jsonify({'message' : 'Usuario no identificado'})
+            resp.status_code = 401
+            return resp
+        
+        id_usuario = usuario.id
         tarea =[tarea_schema.dump(tarea) for tarea in Tarea.query.filter(Tarea.id_usuario == id_usuario,Tarea.id == id_tarea).all()]
         print(tarea)
         if tarea == []:
@@ -123,8 +144,14 @@ class VistaTarea(Resource):
 
     @jwt_required()
     def delete(self, id_tarea):
-                
-        id_usuario = Usuario.query.filter_by(usuario = get_jwt_identity()).first().id
+        usuario = Usuario.query.filter_by(usuario = get_jwt_identity()).first()
+        
+        if usuario == None:
+            resp = jsonify({'message' : 'Usuario no identificado'})
+            resp.status_code = 401
+            return resp
+        
+        id_usuario = usuario.id
         tarea = Tarea.query.filter(Tarea.id_usuario == id_usuario,Tarea.id == id_tarea).first()
         
         if tarea != None:
@@ -161,7 +188,15 @@ class VistaTarea(Resource):
     @jwt_required()
     def put(self, id_tarea):
         try:
-            id_usuario = Usuario.query.filter_by(usuario=get_jwt_identity()).first().id
+            usuario = Usuario.query.filter_by(usuario = get_jwt_identity()).first()
+        
+            if usuario == None:
+                resp = jsonify({'message' : 'Usuario no identificado'})
+                resp.status_code = 401
+                return resp
+        
+            id_usuario = usuario.id
+            
             tarea_actualizar = Tarea.query.filter(Tarea.id_usuario == id_usuario, Tarea.id == id_tarea).first()
             errors = {}
             if tarea_actualizar.estado == EstadoTarea.PROCESSED and os.path.exists(os.path.join(UPLOAD_FOLDER, tarea_actualizar.nombre_archivo)):
@@ -187,7 +222,7 @@ class VistaTarea(Resource):
 class VistaArchivo(Resource):
     @jwt_required()
     def get(self, filename):
-        #id_usuario = Usuario.query.filter_by(usuario = get_jwt_identity()).first().id
+        
         errors = {}
         found = False
         for file in os.listdir(UPLOAD_FOLDER):
