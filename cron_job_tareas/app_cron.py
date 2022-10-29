@@ -20,7 +20,7 @@ MAIL_PASSWORD = 'fqaqckznkqgnqdmp',
 DATABASE_USER = 'conversiontool'
 DATABASE_PASSWORD = 'conversiontool'
 #DATABASE_HOST = 'db'
-DATABASE_HOST = 'desarrollo-cloud-367001:us-central1:conversiontool'
+DATABASE_HOST = '34.27.234.145'
 DATABASE_PORT = '5432'
 DATABASE_NAME = 'conversiontool'
 
