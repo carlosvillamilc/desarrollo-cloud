@@ -9,9 +9,9 @@ services:
     ports:
       - "5000:5000"    
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
-    depends_on:
-      - db
+      - DATABASE_URL=postgresql://conversiontool:conversiontool@34.27.234.145:5432/conversiontool
+    #depends_on:
+    #  - db
     
   #db:
   #  container_name: db
