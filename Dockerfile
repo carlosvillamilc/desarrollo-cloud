@@ -12,7 +12,7 @@ RUN apt-get -y update
 RUN apt-get -y upgrade
 RUN apt-get install -y ffmpeg
 RUN apt-get install -y cron
-RUN apt-get install nfs-common
+RUN apt-get install -y nfs-common
 
 COPY requirements.txt .
 RUN pip install -r requirements.txt
