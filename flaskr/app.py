@@ -12,7 +12,8 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://newuser:1234@localhost:5432/cloud_conversion_tool'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://conversiontool:conversiontool@db:5432/conversiontool'
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://conversiontool:conversiontool@db:5432/conversiontool'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://conversiontool:conversiontool@desarrollo-cloud-367001:us-central1:conversiontool:5432/conversiontool'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY']='secretisimo'
 app.config['PROPAGATE_EXCEPTIONS'] = True

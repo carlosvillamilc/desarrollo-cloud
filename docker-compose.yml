@@ -13,18 +13,18 @@ services:
     depends_on:
       - db
     
-  db:
-    container_name: db
-    image: postgres:alpine
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_DB: conversiontool
-      POSTGRES_USER: conversiontool
-      POSTGRES_PASSWORD: conversiontool
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+  #db:
+  #  container_name: db
+  #  image: postgres:alpine
+  #  ports:
+  #    - "5432:5432"
+  #  environment:
+  #    POSTGRES_DB: conversiontool
+  #    POSTGRES_USER: conversiontool
+  #    POSTGRES_PASSWORD: conversiontool
+  #  volumes:
+  #    - pgdata:/var/lib/postgresql/data
 
 
-volumes:
-  pgdata: {}
+#volumes:
+#  pgdata: {}
