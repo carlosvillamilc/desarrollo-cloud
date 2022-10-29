@@ -8,6 +8,11 @@ WORKDIR /flaskr
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
+RUN apt-get -y update
+RUN apt-get -y upgrade
+RUN apt-get install -y ffmpeg
+RUN apt-get install -y cron
+RUN sudo apt-get install nfs-common
 
 COPY requirements.txt .
 RUN pip install -r requirements.txt
@@ -17,12 +22,9 @@ COPY run_cron.sh ./
 RUN touch run_cron.log ./
 COPY cron_job_tareas/app_cron.py ./
 #COPY cron_job_tareas .
-RUN mkdir ../archivos_audio
 
-RUN apt-get -y update
-RUN apt-get -y upgrade
-RUN apt-get install -y ffmpeg
-RUN apt-get install -y cron
+RUN sudo mkdir -p ../archivos_audio
+RUN sudo mount 10.128.0.3:/home/caedvica86/archivos_audio ../archivos_audio
 
 RUN crontab -l | { cat; echo "* * * * * bash /flaskr/run_cron.sh >> /flaskr/run_cron.log "; } | crontab -
 RUN chmod +x run_cron.sh
