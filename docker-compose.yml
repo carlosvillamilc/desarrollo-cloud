@@ -4,7 +4,7 @@ services:
   flaskapp:
     container_name: flaskapp
     image: flaskapp
-    command: gunicorn --bind 0.0.0.0:5000 wsgi:app
+    command: gunicorn --workers=4 --bind 0.0.0.0:5000 wsgi:app
     build: .
     ports:
       - "5000:5000"    
