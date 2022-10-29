@@ -16,9 +16,9 @@ services:
       - archivos_audio:/archivos_audio
 
   cronapp:
+    tty: true
     container_name: cronapp
     image: cronapp
-    tty: true
     build: .    
     environment:
       - DATABASE_URL=postgresql://conversiontool:conversiontool@34.27.234.145:5432/conversiontool
