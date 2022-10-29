@@ -23,8 +23,8 @@ RUN touch run_cron.log ./
 COPY cron_job_tareas/app_cron.py ./
 #COPY cron_job_tareas .
 
-RUN sudo mkdir -p ../archivos_audio
-RUN sudo mount 10.128.0.3:/home/caedvica86/archivos_audio ../archivos_audio
+RUN mkdir -p ../archivos_audio
+RUN mount 10.128.0.3:/home/caedvica86/archivos_audio ../archivos_audio
 
 RUN crontab -l | { cat; echo "* * * * * bash /flaskr/run_cron.sh >> /flaskr/run_cron.log "; } | crontab -
 RUN chmod +x run_cron.sh
