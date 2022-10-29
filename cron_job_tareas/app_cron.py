@@ -19,7 +19,8 @@ MAIL_PASSWORD = 'fqaqckznkqgnqdmp',
 #docker
 DATABASE_USER = 'conversiontool'
 DATABASE_PASSWORD = 'conversiontool'
-DATABASE_HOST = 'db'
+#DATABASE_HOST = 'db'
+DATABASE_HOST = 'desarrollo-cloud-367001:us-central1:conversiontool'
 DATABASE_PORT = '5432'
 DATABASE_NAME = 'conversiontool'
 
