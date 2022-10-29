@@ -13,6 +13,7 @@ RUN apt-get -y upgrade
 RUN apt-get install -y ffmpeg
 RUN apt-get install -y cron
 RUN apt-get install -y nfs-common
+#RUN apt-get install -y netbase
 
 COPY requirements.txt .
 RUN pip install -r requirements.txt
@@ -23,8 +24,12 @@ RUN touch run_cron.log ./
 COPY cron_job_tareas/app_cron.py ./
 #COPY cron_job_tareas .
 
+#RUN /etc/init.d/rpcbind start
+#RUN /etc/init.d/nfs-common start
+
+#RUN service nfs-common start
 RUN mkdir -p ../archivos_audio
-RUN mount 10.128.0.3:/home/caedvica86/archivos_audio ../archivos_audio
+#RUN mount -o nolock 10.128.0.3:/home/caedvica86/archivos_audio ../archivos_audio
 
 RUN crontab -l | { cat; echo "* * * * * bash /flaskr/run_cron.sh >> /flaskr/run_cron.log "; } | crontab -
 RUN chmod +x run_cron.sh

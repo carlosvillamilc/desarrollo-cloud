@@ -10,6 +10,19 @@ services:
       - "5000:5000"    
     environment:
       - DATABASE_URL=postgresql://conversiontool:conversiontool@34.27.234.145:5432/conversiontool
+    volumes:
+      #- ./config:/config
+      #- ./cache:/cache
+      - archivos_audio:/archivos_audio
+
+
+volumes:
+  archivos_audio:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=10.128.0.3,nolock,soft,rw    # IP of nfs server.  This is also where you put any options '-o' in standard option format
+      device: ":/home/caedvica86/archivos_audio"  # location on nfs server of file/dir you want to mount
     #depends_on:
     #  - db
     
