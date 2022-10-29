@@ -17,7 +17,8 @@ services:
 
   cronapp:
     container_name: cronapp
-    image: cronapp    
+    image: cronapp
+    tty: true
     build: .    
     environment:
       - DATABASE_URL=postgresql://conversiontool:conversiontool@34.27.234.145:5432/conversiontool
