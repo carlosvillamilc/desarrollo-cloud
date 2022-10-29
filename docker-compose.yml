@@ -15,6 +15,15 @@ services:
       #- ./cache:/cache
       - archivos_audio:/archivos_audio
 
+  cronapp:
+    container_name: cronapp
+    image: cronapp    
+    build: .    
+    environment:
+      - DATABASE_URL=postgresql://conversiontool:conversiontool@34.27.234.145:5432/conversiontool
+    volumes:      
+      - archivos_audio:/archivos_audio
+
 
 volumes:
   archivos_audio:
