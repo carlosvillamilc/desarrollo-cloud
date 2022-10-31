@@ -137,7 +137,7 @@ def execute_tasks(tasks):
         formato_destino = str(task[4])
         convert_audio_file(nombre_archivo,formato_destino)
         report_executed_task(task)
-        sendEmail(task)
+        #sendEmail(task)
     
 
 def process_pending_tasks():
