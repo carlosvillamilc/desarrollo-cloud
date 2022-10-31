@@ -71,7 +71,7 @@ def report_executed_task(task):
         cursor = connection.cursor()
         postgreSQL_select_Query = """update tarea set estado = 'PROCESSED' where id = %s"""        
         cursor.execute(postgreSQL_select_Query,(task_id,))
-        print("Updating task status", task_id)
+        print("Updating task status", task_id, datetime.now())
         connection.commit()        
 
     except (Exception, psycopg2.Error) as error:
