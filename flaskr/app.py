@@ -5,12 +5,16 @@ from modelos import db
 from vistas import VistaSignIn, VistaLogIn, VistaTareas, VistaTarea, VistaArchivo
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
+from google.cloud import storage
 
+import os
 #from modelos import *
 #from vistas import *
 #app = create_app('default')
 
 app = Flask(__name__)
+
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '../desarrollo-cloud-368422.json'
 
 #docker
 DATABASE_USER = 'conversiontool'

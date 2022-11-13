@@ -5,13 +5,14 @@ from sqlalchemy.exc import IntegrityError
 from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
 from datetime import datetime
 from werkzeug.utils import secure_filename
+from .utils import *
 
 import os
 import queue
 
 ALLOWED_EXTENSIONS = set(['mp3', 'wav', 'ogg'])
 UPLOAD_FOLDER = '../archivos_audio'
-
+BUCKET_NAME = 'archivos_audio'
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -90,8 +91,9 @@ class VistaTareas(Resource):
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
                 print(filename)
-                file.save(os.path.join(UPLOAD_FOLDER, filename))
-                success = True                
+                file.save(os.path.join(UPLOAD_FOLDER, filename))                
+                success = upload_to_bucket(filename,os.path.join(UPLOAD_FOLDER, filename),BUCKET_NAME)
+                os.remove(os.path.join(UPLOAD_FOLDER, filename))
             else:
                 errors['message'] = 'File type is not allowed or file not specified'
         print(success,errors)
@@ -164,12 +166,11 @@ class VistaTarea(Resource):
             return resp
 
         if tarea.estado == EstadoTarea.PROCESSED:
-            if os.path.exists(os.path.join(UPLOAD_FOLDER, tarea.nombre_archivo)) and \
-                os.path.exists(os.path.join(UPLOAD_FOLDER, nombre_archivo_converido)) :
-                
-                os.remove(os.path.join(UPLOAD_FOLDER, tarea.nombre_archivo))
-                os.remove(os.path.join(UPLOAD_FOLDER, nombre_archivo_converido))
+            if check_blob_exists(tarea.nombre_archivo,BUCKET_NAME) and \
+                check_blob_exists(nombre_archivo_converido,BUCKET_NAME):
 
+                delete_blob(tarea.nombre_archivo,BUCKET_NAME)
+                delete_blob(nombre_archivo_converido,BUCKET_NAME)
                 db.session.delete(tarea)
                 db.session.commit()
                 
@@ -189,7 +190,7 @@ class VistaTarea(Resource):
     def put(self, id_tarea):
         try:
             usuario = Usuario.query.filter_by(usuario = get_jwt_identity()).first()
-        
+            
             if usuario == None:
                 resp = jsonify({'message' : 'Usuario no identificado'})
                 resp.status_code = 401
@@ -198,13 +199,14 @@ class VistaTarea(Resource):
             id_usuario = usuario.id
             
             tarea_actualizar = Tarea.query.filter(Tarea.id_usuario == id_usuario, Tarea.id == id_tarea).first()
-            errors = {}
-            if tarea_actualizar.estado == EstadoTarea.PROCESSED and os.path.exists(os.path.join(UPLOAD_FOLDER, tarea_actualizar.nombre_archivo)):
+            errors = {}            
+            if tarea_actualizar.estado == EstadoTarea.PROCESSED and check_blob_exists(tarea_actualizar.nombre_archivo,BUCKET_NAME):
                 archivo_original = tarea_actualizar.nombre_archivo.split(".")
                 formato_destino = str(tarea_actualizar.formato_destino)        
                 nombre_archivo_converido = archivo_original[0] + '.' +  formato_destino.split(".")[1].lower()
 
-                os.remove(os.path.join(UPLOAD_FOLDER, nombre_archivo_converido))
+                #os.remove(os.path.join(UPLOAD_FOLDER, nombre_archivo_converido))                
+                delete_blob(nombre_archivo_converido,BUCKET_NAME)
  
                 tarea_actualizar.formato_destino = request.json.get("newFormat", tarea_actualizar.formato_destino)
                 tarea_actualizar.estado = EstadoTarea.UPLOADED
@@ -223,15 +225,19 @@ class VistaArchivo(Resource):
     @jwt_required()
     def get(self, filename):
         
-        errors = {}
-        found = False
-        for file in os.listdir(UPLOAD_FOLDER):
-            if str(filename) in file:
-                print(file)
-                found = True
-                return send_from_directory(UPLOAD_FOLDER, file, mimetype='audio/mpeg', as_attachment=True, attachment_filename=filename)
-
+        errors = {}        
+        found = download_from_bucket(filename,os.path.join(UPLOAD_FOLDER, filename),BUCKET_NAME)
+        print(found)
         if found == False:
-            errors['message'] = 'File not found'
+            errors['message'] = 'File not found'            
             resp = jsonify(errors)
+            resp.status_code = 404
             return resp
+        else:
+            for file in os.listdir(UPLOAD_FOLDER):
+                if str(filename) in file:
+                    print(file)
+                    found = True
+                    file_to_send = send_from_directory(UPLOAD_FOLDER, file, mimetype='audio/mpeg', as_attachment=True, attachment_filename=filename)
+                    os.remove(os.path.join(UPLOAD_FOLDER, filename))
+                    return file_to_send       

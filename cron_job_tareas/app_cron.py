@@ -3,6 +3,7 @@ from pydub import AudioSegment
 import yagmail
 import psycopg2
 from datetime import datetime
+from google.cloud import storage
 
 
 MAIL_SERVER='smtp.gmail.com',
@@ -24,16 +25,28 @@ DATABASE_HOST = '34.27.234.145'
 DATABASE_PORT = '5432'
 DATABASE_NAME = 'conversiontool'
 
+#gcp credentials
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '../desarrollo-cloud-368422.json'
+BUCKET_NAME = 'archivos_audio'
 
 def convert_audio_file(fileName,newFormat):
     
     files_path = "../archivos_audio/"
     original = files_path + fileName    
     completeFileName, file_extension = os.path.splitext(original)    
-    converted = completeFileName+ "." + newFormat.lower()
+    converted_file = completeFileName+ "." + newFormat.lower()    
+    download_process = download_from_bucket(fileName,original,BUCKET_NAME)    
+    if download_process == True:
+        sound = AudioSegment.from_file(original, file_extension[1:4])    
+        sound.export(converted_file, format=newFormat.lower())
+        converted_bucket = converted_file.split(files_path)
+        upload_to_bucket(converted_bucket[1],converted_file,BUCKET_NAME)
+        os.remove(os.path.join(files_path, original))
+        os.remove(os.path.join(files_path, converted_file))
+    else:
+        print("Error descargando de cloud storage")
 
-    sound = AudioSegment.from_file(original, file_extension[1:4])    
-    sound.export(converted, format=newFormat.lower())
+    
 
 def query_pending_tasks():
     try:
@@ -148,6 +161,36 @@ def process_pending_tasks():
 def add_usr_local_bin():
     ffmpeg_path = "/usr/local/bin"
     os.environ["PATH"] += os.pathsep + ffmpeg_path
+
+
+
+
+#blob = a binary larg oBject is a collection of a binary data sotres as a single entity
+def upload_to_bucket(blob_name,file_path,bucket_name):
+    print("upload")
+    try:
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(bucket_name)
+        blob = bucket.blob(blob_name)
+        blob.upload_from_filename(file_path)
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
+def download_from_bucket(blob_name,file_path,bucket_name):
+    print("download", file_path)
+    try:
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(bucket_name)
+        blob = bucket.blob(blob_name)
+        with open(file_path,'wb') as f:
+                storage_client.download_blob_to_file(blob,f)        
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
 
 process_pending_tasks()
 
