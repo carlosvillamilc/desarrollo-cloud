@@ -4,6 +4,7 @@ import yagmail
 import psycopg2
 from datetime import datetime
 from google.cloud import storage
+import requests
 
 
 MAIL_SERVER='smtp.gmail.com',
@@ -21,9 +22,13 @@ MAIL_PASSWORD = 'fqaqckznkqgnqdmp',
 DATABASE_USER = 'conversiontool'
 DATABASE_PASSWORD = 'conversiontool'
 #DATABASE_HOST = 'db'
-DATABASE_HOST = '34.27.234.145'
+DATABASE_HOST = '34.28.77.202'
 DATABASE_PORT = '5432'
 DATABASE_NAME = 'conversiontool'
+
+#KEY = '633e66532c7a4cdbaaa7bd093e9867ac-2de3d545-152bfa5e'
+KEY = 'c536a392c5d964e42323a333fde45738-62916a6c-e2aa5d70'
+SANDBOX = 'sandbox85cb5dcfb07a4e6e9ffdc7e24f759e66.mailgun.org'
 
 #gcp credentials
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '../desarrollo-cloud-368422.json'
@@ -47,7 +52,6 @@ def convert_audio_file(fileName,newFormat):
         print("Error descargando de cloud storage")
 
     
-
 def query_pending_tasks():
     try:
         connection = psycopg2.connect(user=DATABASE_USER,
@@ -97,9 +101,23 @@ def report_executed_task(task):
             connection.close()
             #print("PostgreSQL connection is closed")
         return
-    
-    
 
+def send_mail_mailgun(sender, recipient,message):
+    request_url = f'https://api.mailgun.net/v3/{SANDBOX}/messages'
+
+    request = requests.post(request_url, auth=('api', KEY), data={
+        'from': sender,
+        'to': recipient,
+        'subject': 'Tarea de conversion finalizada',
+        'text': message
+    })
+
+    if request.status_code == 200:
+        print('Correo electrónico enviado exitosamente.')
+        #print(request.json())
+
+
+    
 def sendEmail(task):
     idUser = task[1]
     try:
@@ -121,11 +139,12 @@ def sendEmail(task):
         sender_pwd = 'fqaqckznkqgnqdmp'
         
         receivers = [email[0][0]]
-        subject = 'Tarea de conversion finalizada'
+        #subject = 'Tarea de conversion finalizada'
         
         try:
-            yag = yagmail.SMTP(sender,sender_pwd)
-            yag.send(receivers,subject,message)
+            send_mail_mailgun(sender,receivers,message)
+            #yag = yagmail.SMTP(sender,sender_pwd)
+            #yag.send(receivers,subject,message)
         except:
             print("Error: unable to send email")
         
@@ -140,9 +159,6 @@ def sendEmail(task):
             #print("PostgreSQL connection is closed")
         return
 
-    
-    
-    
 def execute_tasks(tasks):
     print("Inicio Ejecucion Tareas Pendientes ", datetime.now())
     for task in tasks:
@@ -150,7 +166,7 @@ def execute_tasks(tasks):
         formato_destino = str(task[4])
         convert_audio_file(nombre_archivo,formato_destino)
         report_executed_task(task)
-        #sendEmail(task)
+        sendEmail(task)
     
 
 def process_pending_tasks():
@@ -161,8 +177,6 @@ def process_pending_tasks():
 def add_usr_local_bin():
     ffmpeg_path = "/usr/local/bin"
     os.environ["PATH"] += os.pathsep + ffmpeg_path
-
-
 
 
 #blob = a binary larg oBject is a collection of a binary data sotres as a single entity
@@ -193,4 +207,3 @@ def download_from_bucket(blob_name,file_path,bucket_name):
 
 
 process_pending_tasks()
-
