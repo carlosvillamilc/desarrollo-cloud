@@ -6,6 +6,7 @@ from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identi
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from .utils import *
+from google.cloud import pubsub_v1
 
 import os
 import queue
@@ -110,6 +111,21 @@ class VistaTareas(Resource):
 
             try:
                 db.session.commit()
+                credentials_path = '..\pubsub-service-key.json'
+                os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
+                publisher = pubsub_v1.PublisherClient()
+                topic_path = 'projects/desarrollo-cloud-368422/topics/async-webapp-worker'
+                attributes = {
+                    'id' : str(nueva_tarea.id),
+                    'nombre_archivo': str(nueva_tarea.nombre_archivo),
+                    'formato_destino': str(nueva_tarea.formato_destino.name),
+                    'id_usuario': str(nueva_tarea.id_usuario)
+                }
+                data = str(nueva_tarea.id)
+                data = data.encode('utf-8')
+                future = publisher.publish(topic_path, data, **attributes)
+                print(f"Punlished message id: {future.result()}")
+
             except IntegrityError:
                 db.session.rollback()
                 return 'La tarea no pudo ser creada',409

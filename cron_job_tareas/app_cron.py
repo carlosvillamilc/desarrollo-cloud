@@ -5,6 +5,9 @@ import psycopg2
 from datetime import datetime
 from google.cloud import storage
 import requests
+from google.cloud import pubsub_v1
+from google.cloud.pubsub_v1.subscriber import exceptions as sub_exceptions
+from concurrent.futures import TimeoutError
 
 
 MAIL_SERVER='smtp.gmail.com',
@@ -53,32 +56,41 @@ def convert_audio_file(fileName,newFormat):
 
     
 def query_pending_tasks():
-    try:
-        connection = psycopg2.connect(user=DATABASE_USER,
-                                    password=DATABASE_PASSWORD,
-                                    host=DATABASE_HOST,
-                                    port=DATABASE_PORT,
-                                    database=DATABASE_NAME)
-        cursor = connection.cursor()
-        postgreSQL_select_Query = "select * from tarea where estado = 'UPLOADED' "
+    credentials_path = '..\pubsub-service-key.json'
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
+    subscriber = pubsub_v1.SubscriberClient()
+    subscription_path = 'projects/desarrollo-cloud-368422/subscriptions/async-webapp-worker-sub'
 
-        cursor.execute(postgreSQL_select_Query)        
-        tareas = cursor.fetchall()
+    timeout = 10.0
 
-    except (Exception, psycopg2.Error) as error:
-        print("Error while fetching data from PostgreSQL", error)
+    def callback(message: pubsub_v1.subscriber.message.Message) -> None:
+        tarea = {}
+        print(f"Received {message}.")
+        print(f'data: {message.data}')
+        if message.attributes:   
+            for key in message.attributes:
+                value = message.attributes.get(key)
+                tarea[key] = value
+        message.ack()
+        execute_task(tarea)
 
-    finally:
-        # closing database connection.
-        if connection:
-            cursor.close()
-            connection.close()
-            #print("PostgreSQL connection is closed")
-        return tareas
+    streaming_pull_future = subscriber.subscribe(subscription_path, callback=callback)
+    print(f"Listening for messages on {subscription_path}..\n")
+
+    # Wrap subscriber in a 'with' block to automatically call close() when done.
+    with subscriber:
+        try:
+            # When `timeout` is not set, result() will block indefinitely,
+            # unless an exception is encountered first.
+            streaming_pull_future.result(timeout=timeout)
+        except TimeoutError:
+            streaming_pull_future.cancel()  # Trigger the shutdown.
+            streaming_pull_future.result()  # Block until the shutdown is complete.
 
 
 def report_executed_task(task):    
-    task_id = task[0]
+    task_id = task["id"]
+    print(task["id"])
     try:
         connection = psycopg2.connect(user=DATABASE_USER,
                                     password=DATABASE_PASSWORD,
@@ -92,7 +104,7 @@ def report_executed_task(task):
         connection.commit()        
 
     except (Exception, psycopg2.Error) as error:
-        print("Error while fetching data from PostgreSQL", error)
+        print("Error while fetching data from PostgreSQL", error, " in 'report_executed_task'")
 
     finally:
         # closing database connection.
@@ -119,7 +131,7 @@ def send_mail_mailgun(sender, recipient,message):
 
     
 def sendEmail(task):
-    idUser = task[1]
+    idUser = task["id_usuario"]
     try:
         connection = psycopg2.connect(user=DATABASE_USER,
                                     password=DATABASE_PASSWORD,
@@ -131,8 +143,8 @@ def sendEmail(task):
 
         cursor.execute(postgreSQL_select_Query,(idUser,))        
         email = cursor.fetchall()                
-        nombre_archivo = task[2]
-        formato_destino = task[4]
+        nombre_archivo = task["nombre_archivo"]
+        formato_destino = task["formato_destino"]
         message = "El proceso de conversion del archivo " + str(nombre_archivo) + " a formato " + str(formato_destino) + " ha sido finalizado"
         print(message)
         sender = 'testcloudteam7@gmail.com'
@@ -149,7 +161,7 @@ def sendEmail(task):
             print("Error: unable to send email")
         
     except (Exception, psycopg2.Error) as error:
-        print("Error while fetching data from PostgreSQL", error)
+        print("Error while fetching data from PostgreSQL", error, " in send_email")
 
     finally:
         # closing database connection.
@@ -159,20 +171,40 @@ def sendEmail(task):
             #print("PostgreSQL connection is closed")
         return
 
-def execute_tasks(tasks):
-    print("Inicio Ejecucion Tareas Pendientes ", datetime.now())
-    for task in tasks:
-        nombre_archivo = str(task[2])
-        formato_destino = str(task[4])
-        convert_audio_file(nombre_archivo,formato_destino)
-        report_executed_task(task)
-        sendEmail(task)
+def execute_task(tarea):
+        """try:
+            connection = psycopg2.connect(user=DATABASE_USER,
+                                    password=DATABASE_PASSWORD,
+                                    host=DATABASE_HOST,
+                                    port=DATABASE_PORT,
+                                    database=DATABASE_NAME)
+            cursor = connection.cursor()
+            postgreSQL_select_Query = "select correo from usuario where id = %s "
+
+            cursor.execute(postgreSQL_select_Query(id_task))        
+            tareas = cursor.fetchall()
+
+        except (Exception, psycopg2.Error) as error:
+            print("Error while fetching data from PostgreSQL", error)
+
+        finally:
+            # closing database connection.
+            if connection:
+                cursor.close()
+                connection.close()
+                #print("PostgreSQL connection is closed")
+            return tareas"""
+        
+        print("Inicio Ejecucion Tareas Pendientes ", datetime.now())
+        convert_audio_file(tarea["nombre_archivo"],tarea["formato_destino"])
+        report_executed_task(tarea)
+        sendEmail(tarea)
     
 
 def process_pending_tasks():
     add_usr_local_bin()   
-    tasks = query_pending_tasks()    
-    execute_tasks(tasks)
+    query_pending_tasks()    
+
 
 def add_usr_local_bin():
     ffmpeg_path = "/usr/local/bin"
