@@ -21,7 +21,7 @@ RUN pip install -r requirements.txt
 
 #COPY run_cron.sh ./
 #RUN touch run_cron.log ./
-COPY cron_job_tareas/ ./
+COPY cron_job_tareas/app_cron.py ./
 
 RUN mkdir -p ../archivos_audio
 
