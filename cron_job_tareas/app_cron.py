@@ -81,7 +81,7 @@ def query_pending_tasks():
         try:
             # When `timeout` is not set, result() will block indefinitely,
             # unless an exception is encountered first.
-            streaming_pull_future.result(timeout=timeout)
+            streaming_pull_future.result()
         except TimeoutError:
             streaming_pull_future.cancel()  # Trigger the shutdown.
             streaming_pull_future.result()  # Block until the shutdown is complete.
