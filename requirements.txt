@@ -1,5 +1,4 @@
 apscheduler==3.9.1
-celery==5.2.2
 Faker==14.0.0
 ffprobe==0.5
 Flask==1.1.2
@@ -9,7 +8,7 @@ Flask-JWT-Extended==4.2.3
 flask-mail==0.9.1
 Flask-RESTful==0.3.9
 Flask-SQLAlchemy==2.5.1
-google-cloud-pubsub==2.13.11
+google-cloud-pubsub
 google-cloud-storage
 greenlet==1.1.0
 gunicorn==20.1.0
@@ -28,4 +27,3 @@ six==1.16.0
 SQLAlchemy==1.4.15
 Werkzeug==2.0.1
 wheel == 0.37.1
-yagmail

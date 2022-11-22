@@ -17,7 +17,8 @@ services:
   cronapp:    
     container_name: cronapp
     image: cronapp
-    command: tail -f /dev/null
+    #command: tail -f /dev/null
+    command: gunicorn --workers=4 --bind 0.0.0.0:5000 wsgi:app
     build:
       dockerfile: Dockerfile_cron
     environment:

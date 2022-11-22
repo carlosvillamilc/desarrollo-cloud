@@ -20,6 +20,8 @@ RUN pip install -r requirements.txt
 
 COPY flaskr ./
 COPY desarrollo-cloud-368422.json ../
+COPY pubsub-service-key.json ../
+
 #COPY run_cron.sh ./
 #RUN touch run_cron.log ./
 #COPY cron_job_tareas/app_cron.py ./

@@ -27,26 +27,29 @@ RUN mkdir -p ../archivos_audio
 
 COPY desarrollo-cloud-368422.json ../
 
-RUN crontab -l | { cat; echo "* * * * * bash /flaskr/run_cron.sh >> /flaskr/run_cron.log "; } | crontab -
-RUN chmod +x run_cron.sh
-RUN chmod u+x run_cron.log
+COPY pubsub-service-key.json ../
+
+#Cronjon
+#RUN crontab -l | { cat; echo "* * * * * bash /flaskr/run_cron.sh >> /flaskr/run_cron.log "; } | crontab -
+#RUN chmod +x run_cron.sh
+#RUN chmod u+x run_cron.log
 # Add crontab file in the cron directory
-ADD run-cron /etc/cron.d/run-cron
+#ADD run-cron /etc/cron.d/run-cron
 
 # Give execution rights on the cron job
-RUN chmod 0644 /etc/cron.d/run-cron
+#RUN chmod 0644 /etc/cron.d/run-cron
 
 # Apply cron job
-RUN crontab /etc/cron.d/run-cron
+#RUN crontab /etc/cron.d/run-cron
 
 # Create the log file to be able to run tail
-RUN touch /var/log/cron.log
+#RUN touch /var/log/cron.log
 
 # Run the command on container startup
 #CMD /etc/init.d/cron start && tail -f /var/log/cron.log
-CMD ["sh","-c","/etc/init.d/cron start"]
+#CMD ["sh","-c","/etc/init.d/cron start"]
 
 ##custom entry point — needed by cron
-COPY entrypoint /entrypoint
-RUN chmod +x /entrypoint
-ENTRYPOINT ["/entrypoint"]
+#COPY entrypoint /entrypoint
+#RUN chmod +x /entrypoint
+#ENTRYPOINT ["/entrypoint"]
