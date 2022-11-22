@@ -1,6 +1,5 @@
 import os
 from pydub import AudioSegment
-import yagmail
 import psycopg2
 from datetime import datetime
 from google.cloud import storage
