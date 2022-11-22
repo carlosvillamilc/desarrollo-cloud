@@ -56,7 +56,7 @@ def convert_audio_file(fileName,newFormat):
 
     
 def query_pending_tasks():
-    credentials_path = '..\pubsub-service-key.json'
+    credentials_path = '../pubsub-service-key.json'
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
     subscriber = pubsub_v1.SubscriberClient()
     subscription_path = 'projects/desarrollo-cloud-368422/subscriptions/async-webapp-worker-sub'

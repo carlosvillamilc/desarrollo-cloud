@@ -111,7 +111,7 @@ class VistaTareas(Resource):
 
             try:
                 db.session.commit()
-                credentials_path = '..\pubsub-service-key.json'
+                credentials_path = '../pubsub-service-key.json'
                 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
                 publisher = pubsub_v1.PublisherClient()
                 topic_path = 'projects/desarrollo-cloud-368422/topics/async-webapp-worker'
