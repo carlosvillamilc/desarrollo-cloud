@@ -44,18 +44,18 @@ os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '../desarrollo-cloud-368422.json'
 BUCKET_NAME = 'archivos_audio'
 
 
-def convert_audio_file(fileName,newFormat):
+def convert_audio_file(fileName,newFormat,id_tarea):
 
     
-    files_path = "../archivos_audio/"
-    original = files_path + fileName    
+    files_path = "../archivos_audio_cron/"
+    original = files_path + id_tarea + fileName    
     completeFileName, file_extension = os.path.splitext(original)    
     converted_file = completeFileName+ "." + newFormat.lower()    
     download_process = download_from_bucket(fileName,original,BUCKET_NAME)    
     if download_process == True:
         sound = AudioSegment.from_file(original, file_extension[1:4])    
         sound.export(converted_file, format=newFormat.lower())
-        converted_bucket = converted_file.split(files_path)
+        converted_bucket = converted_file.split(files_path + id_tarea)
         upload_to_bucket(converted_bucket[1],converted_file,BUCKET_NAME)
         os.remove(os.path.join(files_path, original))
         os.remove(os.path.join(files_path, converted_file))
@@ -182,7 +182,7 @@ def execute_task(tareas):
     print("Inicio Ejecucion Tareas Pendientes ", datetime.now())
     for tarea in tareas:
         print("converting: ", tarea["id"])
-        convert_audio_file(tarea["nombre_archivo"],tarea["formato_destino"])
+        convert_audio_file(tarea["nombre_archivo"],tarea["formato_destino"],tarea["id"])
         report_executed_task(tarea)
         sendEmail(tarea)
 
@@ -230,7 +230,7 @@ def download_from_bucket(blob_name,file_path,bucket_name):
 
 arrayTareas = []
 scheduler = BackgroundScheduler()
-scheduler.add_job(func = clear_tareas, trigger = "interval", seconds=30, id = "tasks")
+scheduler.add_job(func = clear_tareas, trigger = "interval", seconds=60, id = "tasks")
 scheduler.start()
 process_pending_tasks()
 
