@@ -70,8 +70,6 @@ def query_pending_tasks():
     subscriber = pubsub_v1.SubscriberClient()
     subscription_path = 'projects/desarrollo-cloud-368422/subscriptions/async-webapp-worker-sub'
 
-    timeout = 10.0
-
     def callback(message: pubsub_v1.subscriber.message.Message) -> None:
         tarea = {}
         print(f"Received {message}.")
@@ -80,8 +78,8 @@ def query_pending_tasks():
             for key in message.attributes:
                 value = message.attributes.get(key)
                 tarea[key] = value
+            arrayTareas.append(tarea)
         message.ack()
-        execute_task(tarea)
 
     streaming_pull_future = subscriber.subscribe(subscription_path, callback=callback)
     print(f"Listening for messages on {subscription_path}..\n")
@@ -180,34 +178,17 @@ def sendEmail(task):
             #print("PostgreSQL connection is closed")
         return
 
-def execute_task(tarea):
-        """try:
-            connection = psycopg2.connect(user=DATABASE_USER,
-                                    password=DATABASE_PASSWORD,
-                                    host=DATABASE_HOST,
-                                    port=DATABASE_PORT,
-                                    database=DATABASE_NAME)
-            cursor = connection.cursor()
-            postgreSQL_select_Query = "select correo from usuario where id = %s "
-
-            cursor.execute(postgreSQL_select_Query(id_task))        
-            tareas = cursor.fetchall()
-
-        except (Exception, psycopg2.Error) as error:
-            print("Error while fetching data from PostgreSQL", error)
-
-        finally:
-            # closing database connection.
-            if connection:
-                cursor.close()
-                connection.close()
-                #print("PostgreSQL connection is closed")
-            return tareas"""
-        
-        print("Inicio Ejecucion Tareas Pendientes ", datetime.now())
+def execute_task(tareas):
+    print("Inicio Ejecucion Tareas Pendientes ", datetime.now())
+    for tarea in tareas:
+        print("converting: ", tarea["id"])
         convert_audio_file(tarea["nombre_archivo"],tarea["formato_destino"])
         report_executed_task(tarea)
         sendEmail(tarea)
+
+def clear_tareas():
+    execute_task(arrayTareas)
+    arrayTareas.clear()
     
 
 def process_pending_tasks():
@@ -246,4 +227,10 @@ def download_from_bucket(blob_name,file_path,bucket_name):
         print(e)
         return False
 
+
+arrayTareas = []
+scheduler = BackgroundScheduler()
+scheduler.add_job(func = clear_tareas, trigger = "interval", seconds=30, id = "tasks")
+scheduler.start()
 process_pending_tasks()
+

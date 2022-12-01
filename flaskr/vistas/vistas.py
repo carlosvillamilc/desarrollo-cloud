@@ -91,10 +91,15 @@ class VistaTareas(Resource):
             print(allowed_file(file.filename))
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
+                nueva_tarea = Tarea(id_usuario = id_usuario, estado="UPLOADED", nombre_archivo= filename, formato_destino=request.form['newFormat'].upper())
+                db.session.add(nueva_tarea)
+                db.session.commit()
+                filenameLocal = str(nueva_tarea.id)+filename
                 print(filename)
-                file.save(os.path.join(UPLOAD_FOLDER, filename))                
-                success = upload_to_bucket(filename,os.path.join(UPLOAD_FOLDER, filename),BUCKET_NAME)
-                os.remove(os.path.join(UPLOAD_FOLDER, filename))
+                print(filenameLocal)
+                file.save(os.path.join(UPLOAD_FOLDER, filenameLocal))                
+                success = upload_to_bucket(filename,os.path.join(UPLOAD_FOLDER, filenameLocal),BUCKET_NAME)
+                os.remove(os.path.join(UPLOAD_FOLDER, filenameLocal))
             else:
                 errors['message'] = 'File type is not allowed or file not specified'
         print(success,errors)
@@ -106,25 +111,8 @@ class VistaTareas(Resource):
             return resp
         
         if success:            
-            nueva_tarea = Tarea(id_usuario = id_usuario, estado="UPLOADED", nombre_archivo= filename, formato_destino=request.form['newFormat'].upper())
-            db.session.add(nueva_tarea)
-
             try:
-                db.session.commit()
-                credentials_path = '../pubsub-service-key.json'
-                os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
-                publisher = pubsub_v1.PublisherClient()
-                topic_path = 'projects/desarrollo-cloud-368422/topics/async-webapp-worker'
-                attributes = {
-                    'id' : str(nueva_tarea.id),
-                    'nombre_archivo': str(nueva_tarea.nombre_archivo),
-                    'formato_destino': str(nueva_tarea.formato_destino.name),
-                    'id_usuario': str(nueva_tarea.id_usuario)
-                }
-                data = str(nueva_tarea.id)
-                data = data.encode('utf-8')
-                future = publisher.publish(topic_path, data, **attributes)
-                print(f"Punlished message id: {future.result()}")
+                publicar_mensaje(nueva_tarea)
 
             except IntegrityError:
                 db.session.rollback()
@@ -228,6 +216,7 @@ class VistaTarea(Resource):
                 tarea_actualizar.estado = EstadoTarea.UPLOADED
                 try:
                     db.session.commit()
+                    publicar_mensaje(tarea_actualizar)
                     return "El formato fue actualizado"
                 except IntegrityError:
                     db.session.rollback()
@@ -257,3 +246,20 @@ class VistaArchivo(Resource):
                     file_to_send = send_from_directory(UPLOAD_FOLDER, file, mimetype='audio/mpeg', as_attachment=True, attachment_filename=filename)
                     os.remove(os.path.join(UPLOAD_FOLDER, filename))
                     return file_to_send       
+
+
+def publicar_mensaje(nueva_tarea):
+    credentials_path = '../pubsub-service-key.json'
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
+    publisher = pubsub_v1.PublisherClient()
+    topic_path = 'projects/desarrollo-cloud-368422/topics/async-webapp-worker'
+    attributes = {
+        'id' : str(nueva_tarea.id),
+        'nombre_archivo': str(nueva_tarea.nombre_archivo),
+        'formato_destino': str(nueva_tarea.formato_destino.name),
+        'id_usuario': str(nueva_tarea.id_usuario)
+        }
+    data = str(nueva_tarea.id)
+    data = data.encode('utf-8')
+    future = publisher.publish(topic_path, data, **attributes)
+    print(f"Punlished message id: {future.result()}")
