@@ -14,7 +14,7 @@ import os
 
 app = Flask(__name__)
 
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '../desarrollo-cloud-368422.json'
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'desarrollo-cloud-368422.json'
 
 #docker
 #DATABASE_USER = 'conversiontool'

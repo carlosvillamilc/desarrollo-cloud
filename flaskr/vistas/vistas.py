@@ -250,8 +250,8 @@ class VistaArchivo(Resource):
 
 def publicar_mensaje(nueva_tarea):
     #credentials_path = '../pubsub-service-key.json'
-    credentials_path = 'desarrollo-cloud-368422.json'
-    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
+    #credentials_path = 'desarrollo-cloud-368422.json'
+    #os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
     publisher = pubsub_v1.PublisherClient()
     topic_path = 'projects/desarrollo-cloud-368422/topics/async-webapp-worker'
     attributes = {
