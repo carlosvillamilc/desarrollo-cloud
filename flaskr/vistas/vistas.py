@@ -12,7 +12,8 @@ import os
 import queue
 
 ALLOWED_EXTENSIONS = set(['mp3', 'wav', 'ogg'])
-UPLOAD_FOLDER = '../archivos_audio'
+UPLOAD_FOLDER = '.'
+#UPLOAD_FOLDER = '../archivos_audio'
 BUCKET_NAME = 'archivos_audio'
 
 def allowed_file(filename):
@@ -111,6 +112,7 @@ class VistaTareas(Resource):
 
             try:
                 db.session.commit()
+                publicar_mensaje(nueva_tarea)
             except IntegrityError:
                 db.session.rollback()
                 return 'La tarea no pudo ser creada',409
@@ -260,4 +262,4 @@ def publicar_mensaje(nueva_tarea):
     data = str(nueva_tarea.id)
     data = data.encode('utf-8')
     future = publisher.publish(topic_path, data, **attributes)
-    print(f"Punlished message id: {future.result()}")
+    print(f"Published message id: {future.result()}")
