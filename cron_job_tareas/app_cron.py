@@ -1,6 +1,5 @@
 import os
 from pydub import AudioSegment
-import yagmail
 import psycopg2
 from datetime import datetime
 from google.cloud import storage
@@ -8,13 +7,13 @@ import requests
 from google.cloud import pubsub_v1
 from google.cloud.pubsub_v1.subscriber import exceptions as sub_exceptions
 from concurrent.futures import TimeoutError
-from apscheduler.schedulers.background import BackgroundScheduler
-from flask import Flask
+#from apscheduler.schedulers.background import BackgroundScheduler
+#from flask import Flask
 
-app = Flask(__name__)
+#app = Flask(__name__)
 
-app_context = app.app_context()
-app_context.push()
+#app_context = app.app_context()
+#app_context.push()
 
 MAIL_SERVER='smtp.gmail.com',
 MAIL_PORT=587,
@@ -40,32 +39,31 @@ KEY = 'c536a392c5d964e42323a333fde45738-62916a6c-e2aa5d70'
 SANDBOX = 'sandbox85cb5dcfb07a4e6e9ffdc7e24f759e66.mailgun.org'
 
 #gcp credentials
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '../desarrollo-cloud-368422.json'
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'desarrollo-cloud-368422.json'
 BUCKET_NAME = 'archivos_audio'
 
 
-def convert_audio_file(fileName,newFormat,id_tarea):
-
+def convert_audio_file(fileName,newFormat):
     
-    files_path = "../archivos_audio_cron/"
-    original = files_path + id_tarea + fileName    
+    files_path = "."
+    original = files_path + fileName    
     completeFileName, file_extension = os.path.splitext(original)    
     converted_file = completeFileName+ "." + newFormat.lower()    
     download_process = download_from_bucket(fileName,original,BUCKET_NAME)    
     if download_process == True:
+        #sound = AudioSegment(original, file_extension[1:4])    
         sound = AudioSegment.from_file(original, file_extension[1:4])    
         sound.export(converted_file, format=newFormat.lower())
-        converted_bucket = converted_file.split(files_path + id_tarea)
+        converted_bucket = converted_file.split(files_path)
         upload_to_bucket(converted_bucket[1],converted_file,BUCKET_NAME)
         os.remove(os.path.join(files_path, original))
         os.remove(os.path.join(files_path, converted_file))
     else:
         print("Error descargando de cloud storage")
 
-
     
 def query_pending_tasks():
-    credentials_path = '../pubsub-service-key.json'
+    credentials_path = 'desarrollo-cloud-368422.json'
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
     subscriber = pubsub_v1.SubscriberClient()
     subscription_path = 'projects/desarrollo-cloud-368422/subscriptions/async-webapp-worker-sub'
@@ -78,8 +76,9 @@ def query_pending_tasks():
             for key in message.attributes:
                 value = message.attributes.get(key)
                 tarea[key] = value
-            arrayTareas.append(tarea)
-        message.ack()
+            #arrayTareas.append(tarea)
+        #message.ack() //TODO
+        execute_task(tarea)
 
     streaming_pull_future = subscriber.subscribe(subscription_path, callback=callback)
     print(f"Listening for messages on {subscription_path}..\n")
@@ -178,17 +177,15 @@ def sendEmail(task):
             #print("PostgreSQL connection is closed")
         return
 
-def execute_task(tareas):
+def execute_task(tarea):
     print("Inicio Ejecucion Tareas Pendientes ", datetime.now())
-    for tarea in tareas:
-        print("converting: ", tarea["id"])
-        convert_audio_file(tarea["nombre_archivo"],tarea["formato_destino"],tarea["id"])
-        report_executed_task(tarea)
-        sendEmail(tarea)
+    convert_audio_file(tarea["nombre_archivo"],tarea["formato_destino"])
+    report_executed_task(tarea)
+    sendEmail(tarea)
 
-def clear_tareas():
-    execute_task(arrayTareas)
-    arrayTareas.clear()
+#def clear_tareas():
+#    execute_task(arrayTareas)
+#    arrayTareas.clear()
     
 
 def process_pending_tasks():
@@ -228,9 +225,6 @@ def download_from_bucket(blob_name,file_path,bucket_name):
         return False
 
 
-arrayTareas = []
-scheduler = BackgroundScheduler()
-scheduler.add_job(func = clear_tareas, trigger = "interval", seconds=60, id = "tasks")
-scheduler.start()
+#arrayTareas = []
 process_pending_tasks()
 
