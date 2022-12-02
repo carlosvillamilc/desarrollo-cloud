@@ -91,15 +91,10 @@ class VistaTareas(Resource):
             print(allowed_file(file.filename))
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
-                nueva_tarea = Tarea(id_usuario = id_usuario, estado="UPLOADED", nombre_archivo= filename, formato_destino=request.form['newFormat'].upper())
-                db.session.add(nueva_tarea)
-                db.session.commit()
-                filenameLocal = str(nueva_tarea.id)+filename
                 print(filename)
-                print(filenameLocal)
-                file.save(os.path.join(UPLOAD_FOLDER, filenameLocal))                
-                success = upload_to_bucket(filename,os.path.join(UPLOAD_FOLDER, filenameLocal),BUCKET_NAME)
-                os.remove(os.path.join(UPLOAD_FOLDER, filenameLocal))
+                file.save(os.path.join(UPLOAD_FOLDER, filename))                
+                success = upload_to_bucket(filename,os.path.join(UPLOAD_FOLDER, filename),BUCKET_NAME)
+                os.remove(os.path.join(UPLOAD_FOLDER, filename))
             else:
                 errors['message'] = 'File type is not allowed or file not specified'
         print(success,errors)
@@ -111,9 +106,11 @@ class VistaTareas(Resource):
             return resp
         
         if success:            
-            try:
-                publicar_mensaje(nueva_tarea)
+            nueva_tarea = Tarea(id_usuario = id_usuario, estado="UPLOADED", nombre_archivo= filename, formato_destino=request.form['newFormat'].upper())
+            db.session.add(nueva_tarea)
 
+            try:
+                db.session.commit()
             except IntegrityError:
                 db.session.rollback()
                 return 'La tarea no pudo ser creada',409
@@ -249,7 +246,8 @@ class VistaArchivo(Resource):
 
 
 def publicar_mensaje(nueva_tarea):
-    credentials_path = '../pubsub-service-key.json'
+    #credentials_path = '../pubsub-service-key.json'
+    credentials_path = '../desarrollo-cloud-368422.json'
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
     publisher = pubsub_v1.PublisherClient()
     topic_path = 'projects/desarrollo-cloud-368422/topics/async-webapp-worker'
