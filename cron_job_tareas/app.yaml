@@ -1,7 +1,11 @@
 service: worker-app
 
-runtime: python38
+runtime: python3
+
+runtime_config:
+  python_version: 3
 
 env: flex
+
 
 entrypoint: python3 app_cron.py

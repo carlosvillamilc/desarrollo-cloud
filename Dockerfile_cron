@@ -11,8 +11,8 @@ ENV PYTHONUNBUFFERED 1
 RUN apt-get -y update
 RUN apt-get -y upgrade
 RUN apt-get install -y ffmpeg
-RUN apt-get install -y cron
-RUN apt-get install -y nfs-common
+#RUN apt-get install -y cron
+#RUN apt-get install -y nfs-common
 
 
 COPY requirements.txt .
@@ -23,11 +23,13 @@ RUN pip install -r requirements.txt
 #RUN touch run_cron.log ./
 COPY cron_job_tareas/ ./
 
-RUN mkdir -p ../archivos_audio
+#RUN mkdir -p ../archivos_audio
 
-COPY desarrollo-cloud-368422.json ../
+COPY desarrollo-cloud-368422.json ./
 
-COPY pubsub-service-key.json ../
+RUN python3 app_cron.py
+
+#COPY pubsub-service-key.json ../
 
 #Cronjon
 #RUN crontab -l | { cat; echo "* * * * * bash /flaskr/run_cron.sh >> /flaskr/run_cron.log "; } | crontab -
