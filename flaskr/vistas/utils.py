@@ -6,7 +6,7 @@ def upload_to_bucket(blob_name,file_path,bucket_name):
         storage_client = storage.Client()
         bucket = storage_client.bucket(bucket_name)
         blob = bucket.blob(blob_name)
-        blob.upload_from_filename(file_path)
+        blob.upload_from_file(file_path)
         return True
     except Exception as e:
         print(e)

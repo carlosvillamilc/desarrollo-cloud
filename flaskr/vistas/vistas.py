@@ -93,9 +93,10 @@ class VistaTareas(Resource):
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
                 print(filename)
-                file.save(os.path.join(UPLOAD_FOLDER, filename))                
-                success = upload_to_bucket(filename,os.path.join(UPLOAD_FOLDER, filename),BUCKET_NAME)
-                os.remove(os.path.join(UPLOAD_FOLDER, filename))
+                #file.save(os.path.join(UPLOAD_FOLDER, filename))                
+                success = upload_to_bucket(filename,file,BUCKET_NAME)
+                #success = upload_to_bucket(filename,os.path.join(UPLOAD_FOLDER, filename),BUCKET_NAME)
+                #os.remove(os.path.join(UPLOAD_FOLDER, filename))
             else:
                 errors['message'] = 'File type is not allowed or file not specified'
         print(success,errors)
