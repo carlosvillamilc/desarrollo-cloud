@@ -39,8 +39,8 @@ KEY = 'c536a392c5d964e42323a333fde45738-62916a6c-e2aa5d70'
 SANDBOX = 'sandbox85cb5dcfb07a4e6e9ffdc7e24f759e66.mailgun.org'
 
 #gcp credentials
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'desarrollo-cloud-368422.json'
-BUCKET_NAME = 'archivos_audio'
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'desarrollo-cloud.json'
+BUCKET_NAME = 'bucket_archivos_audio'
 
 app = Flask(__name__)
 app_context = app.app_context()
@@ -66,10 +66,11 @@ def convert_audio_file(fileName,newFormat):
 
     
 def query_pending_tasks():
-    credentials_path = 'desarrollo-cloud-368422.json'
+    credentials_path = 'desarrollo-cloud.json'
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
     subscriber = pubsub_v1.SubscriberClient()
-    subscription_path = 'projects/desarrollo-cloud-368422/subscriptions/async-webapp-worker-sub'
+    subscription_path = 'projects/desarrollo-cloud-370513/subscriptions/async-webapp-worker-sub'
+    
 
     def callback(message: pubsub_v1.subscriber.message.Message) -> None:
         tarea = {}

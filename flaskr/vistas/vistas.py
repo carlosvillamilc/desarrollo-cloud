@@ -14,7 +14,7 @@ import queue
 ALLOWED_EXTENSIONS = set(['mp3', 'wav', 'ogg'])
 UPLOAD_FOLDER = '.'
 #UPLOAD_FOLDER = '../archivos_audio'
-BUCKET_NAME = 'archivos_audio'
+BUCKET_NAME = 'bucket_archivos_audio'
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -250,10 +250,13 @@ class VistaArchivo(Resource):
 
 def publicar_mensaje(nueva_tarea):
     #credentials_path = '../pubsub-service-key.json'
-    credentials_path = 'desarrollo-cloud-368422.json'
+    credentials_path = 'desarrollo-cloud.json'
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
     publisher = pubsub_v1.PublisherClient()
-    topic_path = 'projects/desarrollo-cloud-368422/topics/async-webapp-worker'
+    #topic_path = 'projects/desarrollo-cloud-368422/topics/async-webapp-worker'
+    topic_path = 'projects/desarrollo-cloud-370513/topics/async-webapp-worker'
+
+    
     attributes = {
         'id' : str(nueva_tarea.id),
         'nombre_archivo': str(nueva_tarea.nombre_archivo),
