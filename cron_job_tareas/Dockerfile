@@ -26,7 +26,7 @@ COPY . ./
 
 #RUN mkdir -p ../archivos_audio
 
-COPY desarrollo-cloud-368422.json ./
+COPY desarrollo-cloud.json ./
 
 #RUN python3 app_cron.py
 
