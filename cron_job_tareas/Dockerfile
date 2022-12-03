@@ -28,6 +28,8 @@ COPY . ./
 
 COPY desarrollo-cloud.json ./
 
+CMD ["gunicorn"  , "-b", "0.0.0.0:8000", "app:app"]
+
 #RUN python3 app_cron.py
 
 #COPY pubsub-service-key.json ../

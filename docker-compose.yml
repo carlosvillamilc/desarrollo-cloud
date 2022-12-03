@@ -10,7 +10,7 @@ services:
     ports:
       - "5000:5000"    
     environment:
-      - DATABASE_URL=postgresql://conversiontool:conversiontool@34.28.77.202:5432/conversiontool
+      - DATABASE_URL=postgresql://conversiontool:conversiontool@34.171.156.60:5432/conversiontool
     #volumes:     
     #  - archivos_audio:/archivos_audio
 
@@ -22,7 +22,7 @@ services:
     build:
       dockerfile: Dockerfile_cron
     environment:
-      - DATABASE_URL=postgresql://conversiontool:conversiontool@34.28.77.202:5432/conversiontool
+      - DATABASE_URL=postgresql://conversiontool:conversiontool@34.171.156.60:5432/conversiontool
     #volumes:      
     #  - archivos_audio:/archivos_audio
 
