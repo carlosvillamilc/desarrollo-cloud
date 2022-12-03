@@ -21,13 +21,14 @@ RUN pip install -r requirements.txt
 
 #COPY run_cron.sh ./
 #RUN touch run_cron.log ./
-COPY cron_job_tareas/ ./
+#COPY cron_job_tareas/ ./
+COPY . ./
 
 #RUN mkdir -p ../archivos_audio
 
 COPY desarrollo-cloud-368422.json ./
 
-#RUN python3 app_cron.py
+RUN python3 app_cron.py
 
 #COPY pubsub-service-key.json ../
 

@@ -77,7 +77,7 @@ def query_pending_tasks():
                 value = message.attributes.get(key)
                 tarea[key] = value
             #arrayTareas.append(tarea)
-        #message.ack() //TODO
+        message.ack()
         execute_task(tarea)
 
     streaming_pull_future = subscriber.subscribe(subscription_path, callback=callback)
