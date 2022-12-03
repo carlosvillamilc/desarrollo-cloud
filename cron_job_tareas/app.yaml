@@ -8,4 +8,4 @@ runtime_config:
 env: flex
 
 
-entrypoint: python3 app_cron.py
+entrypoint: gunicorn -b :5000 main:app

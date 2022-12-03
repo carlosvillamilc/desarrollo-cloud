@@ -7,8 +7,8 @@ import requests
 from google.cloud import pubsub_v1
 from google.cloud.pubsub_v1.subscriber import exceptions as sub_exceptions
 from concurrent.futures import TimeoutError
-#from apscheduler.schedulers.background import BackgroundScheduler
-#from flask import Flask
+from apscheduler.schedulers.background import BackgroundScheduler
+from flask import Flask
 
 #app = Flask(__name__)
 
@@ -42,6 +42,9 @@ SANDBOX = 'sandbox85cb5dcfb07a4e6e9ffdc7e24f759e66.mailgun.org'
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'desarrollo-cloud-368422.json'
 BUCKET_NAME = 'archivos_audio'
 
+app = Flask(__name__)
+app_context = app.app_context()
+app_context.push()
 
 def convert_audio_file(fileName,newFormat):
     
@@ -88,7 +91,9 @@ def query_pending_tasks():
         try:
             # When `timeout` is not set, result() will block indefinitely,
             # unless an exception is encountered first.
-            streaming_pull_future.result()
+            timeout = 60.0
+            streaming_pull_future.result(timeout=timeout)
+            #streaming_pull_future.result()
         except TimeoutError:
             streaming_pull_future.cancel()  # Trigger the shutdown.
             streaming_pull_future.result()  # Block until the shutdown is complete.
@@ -226,5 +231,8 @@ def download_from_bucket(blob_name,file_path,bucket_name):
 
 
 #arrayTareas = []
-process_pending_tasks()
+#process_pending_tasks()
 
+scheduler = BackgroundScheduler()
+scheduler.add_job(func = process_pending_tasks, trigger = "interval", seconds=60, id = "tasks")
+scheduler.start()

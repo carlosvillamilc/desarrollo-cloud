@@ -28,7 +28,7 @@ COPY . ./
 
 COPY desarrollo-cloud-368422.json ./
 
-RUN python3 app_cron.py
+#RUN python3 app_cron.py
 
 #COPY pubsub-service-key.json ../
 
