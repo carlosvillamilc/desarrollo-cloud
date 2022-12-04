@@ -49,16 +49,20 @@ app_context.push()
 def convert_audio_file(fileName,newFormat):
     
     files_path = "."
-    original = files_path + fileName    
-    completeFileName, file_extension = os.path.splitext(original)    
+    #original = files_path + fileName
+    original = fileName    
+    completeFileName, file_extension = os.path.splitext(original)
+    print("completeFileName ",completeFileName)
+    print("file_extension ",file_extension)
     converted_file = completeFileName+ "." + newFormat.lower()    
-    download_process = download_from_bucket(fileName,original,BUCKET_NAME)    
+    print("converted_file "+converted_file)
+    download_process = download_from_bucket(fileName,original,BUCKET_NAME)
+    print("fileName "+fileName)
     if download_process == True:
-        #sound = AudioSegment(original, file_extension[1:4])    
         sound = AudioSegment.from_file(original, file_extension[1:4])    
         sound.export(converted_file, format=newFormat.lower())
-        converted_bucket = converted_file.split(files_path)
-        upload_to_bucket(converted_bucket[1],converted_file,BUCKET_NAME)
+        #converted_bucket = converted_file.split(files_path)
+        upload_to_bucket(converted_file,converted_file,BUCKET_NAME)
         os.remove(os.path.join(files_path, original))
         os.remove(os.path.join(files_path, converted_file))
     else:

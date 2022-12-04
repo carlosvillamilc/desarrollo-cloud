@@ -207,8 +207,7 @@ class VistaTarea(Resource):
             if tarea_actualizar.estado == EstadoTarea.PROCESSED and check_blob_exists(tarea_actualizar.nombre_archivo,BUCKET_NAME):
                 archivo_original = tarea_actualizar.nombre_archivo.split(".")
                 formato_destino = str(tarea_actualizar.formato_destino)        
-                nombre_archivo_converido = archivo_original[0] + '.' +  formato_destino.split(".")[1].lower()
-
+                nombre_archivo_converido = archivo_original[0] + '.' +  formato_destino.split(".")[1].lower()                
                 #os.remove(os.path.join(UPLOAD_FOLDER, nombre_archivo_converido))                
                 delete_blob(nombre_archivo_converido,BUCKET_NAME)
  
