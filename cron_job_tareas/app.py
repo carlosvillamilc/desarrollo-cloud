@@ -30,7 +30,7 @@ MAIL_PASSWORD = 'fqaqckznkqgnqdmp',
 DATABASE_USER = 'conversiontool'
 DATABASE_PASSWORD = 'conversiontool'
 #DATABASE_HOST = 'db'
-DATABASE_HOST = '34.28.77.202'
+DATABASE_HOST = '34.171.156.60'
 DATABASE_PORT = '5432'
 DATABASE_NAME = 'conversiontool'
 
