@@ -28,7 +28,7 @@ COPY . ./
 
 COPY desarrollo-cloud.json ./
 
-CMD ["gunicorn"  , "-b", "0.0.0.0:8000", "app:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:8000", ,"--timeout","3600" "main:app"]
 
 #RUN python3 app_cron.py
 
