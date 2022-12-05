@@ -96,9 +96,9 @@ def query_pending_tasks():
         try:
             # When `timeout` is not set, result() will block indefinitely,
             # unless an exception is encountered first.
-            timeout = 60.0
-            streaming_pull_future.result(timeout=timeout)
-            #streaming_pull_future.result()
+            #timeout = 60.0
+            #streaming_pull_future.result(timeout=timeout)
+            streaming_pull_future.result()
         except TimeoutError:
             streaming_pull_future.cancel()  # Trigger the shutdown.
             streaming_pull_future.result()  # Block until the shutdown is complete.
@@ -236,8 +236,8 @@ def download_from_bucket(blob_name,file_path,bucket_name):
 
 
 #arrayTareas = []
-#process_pending_tasks()
+process_pending_tasks()
 
-scheduler = BackgroundScheduler()
-scheduler.add_job(func = process_pending_tasks, trigger = "interval", seconds=60, id = "tasks")
-scheduler.start()
+#scheduler = BackgroundScheduler()
+#scheduler.add_job(func = process_pending_tasks, trigger = "interval", seconds=60, id = "tasks")
+#scheduler.start()

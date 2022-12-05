@@ -92,6 +92,12 @@ class VistaTareas(Resource):
             print(allowed_file(file.filename))
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
+                
+                print(datetime.now())
+                dt = datetime.now()
+                ts = int(datetime.timestamp(dt))                
+                print("Timestamp is:", ts)
+                filename = str(ts) + "-" + filename
                 print(filename)
                 #file.save(os.path.join(UPLOAD_FOLDER, filename))                
                 success = upload_to_bucket(filename,file,BUCKET_NAME)
@@ -109,6 +115,7 @@ class VistaTareas(Resource):
         
         if success:            
             nueva_tarea = Tarea(id_usuario = id_usuario, estado="UPLOADED", nombre_archivo= filename, formato_destino=request.form['newFormat'].upper())
+            print(nueva_tarea.id)
             db.session.add(nueva_tarea)
 
             try:

@@ -7,7 +7,7 @@ runtime_config:
 
 env: flex
 
-entrypoint: gunicorn -b :5000 main:app
+entrypoint: gunicorn --workers=4 -b :5001 --timeout 3600  main:app
 
 #manual_scaling:
 #  instances: 1
